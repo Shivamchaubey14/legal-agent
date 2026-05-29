@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Create Account — LexAI{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-page {
+  min-height: calc(100vh - 58px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 24px; position: relative;
+}
+.auth-page::before {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.auth-card {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px;
+  box-shadow: var(--shadow-lg);
+}
+.auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+.auth-logo-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), #8B6914);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #0A0B0F;
+  box-shadow: 0 0 18px var(--gold-glow);
+}
+.auth-brand { font-family: 'Instrument Serif', serif; font-size: 20px; color: var(--txt); }
+.auth-brand span { color: var(--gold); }
+.auth-title { font-size: 22px; font-weight: 600; color: var(--txt); margin-bottom: 6px; letter-spacing: -0.02em; }
+.auth-sub { font-size: 13px; color: var(--txt3); margin-bottom: 28px; }
+.auth-form { display: flex; flex-direction: column; gap: 18px; }
+.auth-submit {
+  width: 100%; padding: 11px; font-size: 14px; font-weight: 700;
+  border-radius: var(--radius-sm); cursor: pointer; border: none;
+  background: var(--gold); color: #0A0B0F;
+  font-family: 'Geist', sans-serif;
+  box-shadow: 0 0 18px var(--gold-glow); transition: all 0.15s;
+}
+.auth-submit:hover { background: var(--gold-light); transform: translateY(-1px); }
+.auth-switch { text-align: center; font-size: 12.5px; color: var(--txt4); margin-top: 18px; }
+.auth-switch a { color: var(--gold); text-decoration: none; font-weight: 600; }
+.auth-switch a:hover { text-decoration: underline; }
+.perks { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.perk { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--txt3); }
+.perk i { color: var(--gold); font-size: 13px; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><i class="ti ti-scale"></i></div>
+      <span class="auth-brand">Lex<span>AI</span></span>
+    </div>
+    <div class="auth-title">Create your account</div>
+    <div class="auth-sub">Start reviewing contracts with AI — free.</div>
+
+    <div class="perks">
+      <div class="perk"><i class="ti ti-check"></i> Unlimited contract uploads</div>
+      <div class="perk"><i class="ti ti-check"></i> AI clause detection &amp; risk scoring</div>
+      <div class="perk"><i class="ti ti-check"></i> Multi-turn Q&amp;A with citations</div>
+    </div>
+
+    <form class="auth-form" method="POST" action="/auth/register/">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" name="username" placeholder="choose_a_username" autocomplete="username" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" name="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" name="password" placeholder="min 8 characters" autocomplete="new-password" required />
+      </div>
+      <button type="submit" class="auth-submit">
+        <i class="ti ti-rocket" style="margin-right:6px;"></i> Create Account
+      </button>
+    </form>
+
+    <div class="auth-switch">
+      Already have an account? <a href="/auth/login/">Sign in</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
