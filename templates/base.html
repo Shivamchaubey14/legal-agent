@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}LexAI — Legal Contract Intelligence{% endblock %}</title>
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Core palette — deep ink with legal parchment accents */
+      --bg:          #0A0B0F;
+      --bg2:         #0F1117;
+      --bg3:         #141720;
+      --surface:     #181C27;
+      --surface2:    #1E2333;
+      --surface3:    #252C40;
+
+      --border:      rgba(255,255,255,0.055);
+      --border2:     rgba(255,255,255,0.09);
+      --border3:     rgba(255,255,255,0.15);
+
+      --txt:         #EEF0F6;
+      --txt2:        #9BA3B8;
+      --txt3:        #575F78;
+      --txt4:        #323849;
+
+      /* Gold accent — legal authority */
+      --gold:        #C9A84C;
+      --gold-light:  #E8C96A;
+      --gold-dim:    rgba(201,168,76,0.12);
+      --gold-glow:   rgba(201,168,76,0.22);
+
+      /* Risk colors */
+      --low:         #3DD68C;
+      --low-bg:      rgba(61,214,140,0.10);
+      --med:         #F5A623;
+      --med-bg:      rgba(245,166,35,0.10);
+      --high:        #FF6B6B;
+      --high-bg:     rgba(255,107,107,0.10);
+      --critical:    #FF2D55;
+      --critical-bg: rgba(255,45,85,0.10);
+
+      --radius-sm:   6px;
+      --radius-md:   10px;
+      --radius-lg:   16px;
+      --radius-xl:   22px;
+
+      --shadow-sm:   0 1px 4px rgba(0,0,0,0.4);
+      --shadow-md:   0 4px 20px rgba(0,0,0,0.5);
+      --shadow-lg:   0 12px 48px rgba(0,0,0,0.65);
+      --glow-gold:   0 0 28px var(--gold-glow);
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: 'Geist', sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Subtle grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 28px;
+      height: 58px;
+      background: rgba(10,11,15,0.92);
+      border-bottom: 1px solid var(--border2);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--gold), #8B6914);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 18px var(--gold-glow);
+      flex-shrink: 0;
+    }
+    .nav-logo i { color: #0A0B0F; font-size: 16px; }
+    .nav-brand-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 18px;
+      color: var(--txt);
+      letter-spacing: -0.01em;
+    }
+    .nav-brand-name span { color: var(--gold); }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 4px;
+      margin-left: 24px;
+      list-style: none;
+    }
+    .nav-links a {
+      padding: 5px 13px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--txt3);
+      text-decoration: none;
+      transition: color 0.15s, background 0.15s;
+      font-weight: 400;
+    }
+    .nav-links a:hover { color: var(--txt); background: var(--surface); }
+    .nav-links a.active { color: var(--gold); background: var(--gold-dim); }
+
+    .nav-end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    .nav-user {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12.5px; color: var(--txt3);
+    }
+    .nav-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: var(--gold); font-weight: 700;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--txt2);
+      font-size: 13px;
+      font-family: 'Geist', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--surface2); border-color: var(--border3); color: var(--txt); }
+    .btn:active { transform: scale(0.98); }
+    .btn i { font-size: 15px; }
+
+    .btn-gold {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #0A0B0F;
+      font-weight: 700;
+      box-shadow: 0 0 18px var(--gold-glow);
+    }
+    .btn-gold:hover {
+      background: var(--gold-light);
+      border-color: var(--gold-light);
+      color: #0A0B0F;
+      box-shadow: 0 0 28px rgba(232,201,106,0.35);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border2);
+      color: var(--txt3);
+    }
+    .btn-ghost:hover { background: var(--surface); color: var(--txt2); }
+
+    .btn-danger { border-color: rgba(255,107,107,0.3); color: var(--high); }
+    .btn-danger:hover { background: var(--high-bg); border-color: var(--high); }
+
+    /* ── Form elements ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label {
+      font-size: 11.5px; font-weight: 600;
+      color: var(--txt3); letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .form-input {
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      color: var(--txt);
+      font-size: 13.5px;
+      font-family: 'Geist', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .form-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-dim);
+    }
+    .form-input::placeholder { color: var(--txt4); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Risk badges ── */
+    .risk-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 99px;
+      letter-spacing: 0.06em;
+      font-family: 'DM Mono', monospace;
+    }
+    .risk-low      { background: var(--low-bg);      color: var(--low);      border: 1px solid rgba(61,214,140,0.2); }
+    .risk-medium   { background: var(--med-bg);      color: var(--med);      border: 1px solid rgba(245,166,35,0.2); }
+    .risk-high     { background: var(--high-bg);     color: var(--high);     border: 1px solid rgba(255,107,107,0.2); }
+    .risk-critical { background: var(--critical-bg); color: var(--critical); border: 1px solid rgba(255,45,85,0.2); }
+
+    /* ── Messages ── */
+    .messages-container {
+      position: fixed; top: 72px; right: 20px;
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 999;
+    }
+    .message {
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--txt);
+      box-shadow: var(--shadow-md);
+      animation: slideIn 0.25s ease;
+      max-width: 320px;
+    }
+    .message.error   { border-color: rgba(255,107,107,0.3); color: var(--high); }
+    .message.success { border-color: rgba(61,214,140,0.3);  color: var(--low); }
+    @keyframes slideIn { from { opacity:0; transform: translateX(12px); } to { opacity:1; transform: none; } }
+
+    /* ── Utilities ── */
+    .mono { font-family: 'DM Mono', monospace; }
+    .serif { font-family: 'Instrument Serif', serif; }
+    .text-gold { color: var(--gold); }
+    .text-muted { color: var(--txt3); }
+    .divider { height: 1px; background: var(--border); margin: 0; }
+
+    /* ── Page wrapper ── */
+    .page { position: relative; z-index: 1; min-height: calc(100vh - 58px); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+
+{% if messages %}
+<div class="messages-container">
+  {% for msg in messages %}
+  <div class="message {{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <div class="nav-logo"><i class="ti ti-scale"></i></div>
+    <span class="nav-brand-name">Lex<span>AI</span></span>
+  </a>
+
+  {% if user.is_authenticated %}
+  <ul class="nav-links">
+    <li><a href="/dashboard/" class="{% block nav_dashboard %}{% endblock %}">Dashboard</a></li>
+  </ul>
+  <div class="nav-end">
+    <div class="nav-user">
+      <div class="nav-avatar">{{ user.username|slice:":1"|upper }}</div>
+      <span>{{ user.username }}</span>
+    </div>
+    <a href="/auth/logout/" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">
+      <i class="ti ti-logout"></i> Logout
+    </a>
+  </div>
+  {% else %}
+  <div class="nav-end">
+    <a href="/auth/login/"    class="btn btn-ghost" style="padding:6px 14px;font-size:12.5px;">Login</a>
+    <a href="/auth/register/" class="btn btn-gold"  style="padding:6px 14px;font-size:12.5px;">Get Started</a>
+  </div>
+  {% endif %}
+</nav>
+
+<div class="page">
+  {% block content %}{% endblock %}
+</div>
+
+{% block extra_js %}{% endblock %}
+<script>
+  // Auto-dismiss messages
+  setTimeout(() => {
+    document.querySelectorAll('.message').forEach(m => {
+      m.style.transition = 'opacity 0.4s';
+      m.style.opacity = '0';
+      setTimeout(() => m.remove(), 400);
+    });
+  }, 4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Web / API
+django>=4.2
+djangorestframework>=3.15
+django-cors-headers>=4.3
+
+# Database (uncomment for production)
+# mysqlclient>=2.2
+
+# Vector & LLM (Day 6+)
+# chromadb
+# sentence-transformers
+# anthropic
+# langchain
+# langgraph
+# langchain-anthropic
+
+# Document Parsing (Day 5+)
+# pymupdf
+# pdfplumber
+# python-docx
+# pytesseract
+# Pillow
+
+# Task Queue (Day 8+)
+# celery
+# redis
+
+# Report Generation (Day 18+)
+# reportlab
+
+# Utilities
+python-dotenv
