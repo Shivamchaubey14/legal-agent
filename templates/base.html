@@ -57,13 +57,14 @@
     }
 
     html, body {
-      min-height: 100%;
-      font-family: 'Geist', sans-serif;
-      background: var(--bg);
-      color: var(--txt);
-      font-size: 14px;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
+        height: 100%;
+        min-height: 100%;
+        font-family: 'Geist', sans-serif;
+        background: var(--bg);
+        color: var(--txt);
+        font-size: 14px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
     }
 
     /* Subtle grain overlay */
@@ -80,9 +81,10 @@
       display: flex; align-items: center; gap: 12px;
       padding: 0 28px;
       height: 58px;
-      background: rgba(10,11,15,0.92);
-      border-bottom: 1px solid var(--border2);
+      background: rgba(10,11,15,0.85);
       backdrop-filter: blur(18px);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04),
+                  0 4px 24px rgba(10,11,15,0.8);
     }
 
     .nav-brand {
@@ -258,7 +260,14 @@
     .divider { height: 1px; background: var(--border); margin: 0; }
 
     /* ── Page wrapper ── */
-    .page { position: relative; z-index: 1; min-height: calc(100vh - 58px); }
+    .page {
+    position: relative;
+    z-index: 1;
+    min-height: calc(100vh - 58px);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
