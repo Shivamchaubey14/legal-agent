@@ -1,6 +1,65 @@
 {% extends 'base.html' %}
 {% block title %}Sign In — LexAI{% endblock %}
 
+{% block extra_js %}
+<script>
+  const form    = document.getElementById('login-form');
+  const btn     = document.getElementById('login-btn');
+  const errBox  = document.getElementById('form-error');
+
+  function showError(msg) {
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+  }
+  function clearError() {
+    errBox.style.display = 'none';
+    errBox.textContent = '';
+  }
+  function setLoading(on) {
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Signing in…'
+      : '<i class="ti ti-login" style="margin-right:6px;"></i> Sign In';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    setLoading(true);
+
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const res  = await fetch('/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrf,
+        },
+        body: JSON.stringify({
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = data.redirect;
+      } else {
+        showError(data.error || 'Something went wrong.');
+        setLoading(false);
+      }
+    } catch (err) {
+      showError('Network error — please try again.');
+      setLoading(false);
+    }
+  });
+</script>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
 {% block extra_css %}
 <style>
   .auth-page {
@@ -137,6 +196,65 @@
 </style>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+  const form    = document.getElementById('login-form');
+  const btn     = document.getElementById('login-btn');
+  const errBox  = document.getElementById('form-error');
+
+  function showError(msg) {
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+  }
+  function clearError() {
+    errBox.style.display = 'none';
+    errBox.textContent = '';
+  }
+  function setLoading(on) {
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Signing in…'
+      : '<i class="ti ti-login" style="margin-right:6px;"></i> Sign In';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    setLoading(true);
+
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const res  = await fetch('/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrf,
+        },
+        body: JSON.stringify({
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = data.redirect;
+      } else {
+        showError(data.error || 'Something went wrong.');
+        setLoading(false);
+      }
+    } catch (err) {
+      showError('Network error — please try again.');
+      setLoading(false);
+    }
+  });
+</script>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="auth-page">
   <div class="auth-card">
@@ -147,13 +265,25 @@
     <div class="auth-title">Welcome back</div>
     <div class="auth-sub">Sign in to your account to continue.</div>
 
-    <form class="auth-form" method="POST" action="/auth/login/">
+    <div id="form-error" style="
+      display:none;
+      background: var(--high-bg);
+      border: 1px solid rgba(255,107,107,0.3);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: var(--high);
+      margin-bottom: 4px;
+    "></div>
+
+    <form class="auth-form" id="login-form">
       {% csrf_token %}
       <div class="form-group">
         <label class="form-label">Username</label>
         <input
           class="form-input"
           type="text"
+          id="username"
           name="username"
           placeholder="your_username"
           autocomplete="username"
@@ -165,13 +295,14 @@
         <input
           class="form-input"
           type="password"
+          id="password"
           name="password"
           placeholder="••••••••"
           autocomplete="current-password"
           required
         />
       </div>
-      <button type="submit" class="auth-submit">
+      <button type="submit" class="auth-submit" id="login-btn">
         <i class="ti ti-login" style="margin-right: 6px"></i> Sign In
       </button>
     </form>
@@ -182,4 +313,63 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const form    = document.getElementById('login-form');
+  const btn     = document.getElementById('login-btn');
+  const errBox  = document.getElementById('form-error');
+
+  function showError(msg) {
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+  }
+  function clearError() {
+    errBox.style.display = 'none';
+    errBox.textContent = '';
+  }
+  function setLoading(on) {
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Signing in…'
+      : '<i class="ti ti-login" style="margin-right:6px;"></i> Sign In';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    setLoading(true);
+
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const res  = await fetch('/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrf,
+        },
+        body: JSON.stringify({
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = data.redirect;
+      } else {
+        showError(data.error || 'Something went wrong.');
+        setLoading(false);
+      }
+    } catch (err) {
+      showError('Network error — please try again.');
+      setLoading(false);
+    }
+  });
+</script>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 {% endblock %}
