@@ -1,0 +1,2082 @@
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from .managers import CustomUserManager
+from django.db import models
+from django.core.validators import FileExtensionValidator
+from django.utils.timezone import localtime
+from pytz import timezone
+from datetime import datetime, timedelta
+import uuid
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    ROLE_CHOICES = [
+        ('data_entry', 'Data Entry'),
+        ('viewer', 'Viewer'),
+    ]
+    
+    ASSIGNED_UNDER_CHOICES = [
+        ('legal', 'Legal'),
+        ('logistic inward', 'Logistic Inward'),
+        ('logistic outward', 'Logistic Outward'),
+    ]
+    
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=250, null=True)
+    last_name = models.CharField(max_length=250, null=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    assigned_under = models.CharField(
+        max_length=20, 
+        choices=ASSIGNED_UNDER_CHOICES,
+        null=True,
+        blank=True,
+        help_text="Department assignment for data entry users"
+    )
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    employee_code = models.CharField(max_length=250, null=True)
+    profile_picture = models.ImageField(
+        upload_to='profile_pics/',
+        null=True,
+        blank=True,
+        help_text="Upload a profile picture (JPG, PNG, Max 2MB)"
+    )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['role']
+
+    objects = CustomUserManager()
+
+    def __str__(self):
+        return self.email
+        
+    def can_access_agreement_type(self, agreement_type):
+        """Check if user can access specific agreement type based on role and assignment"""
+        if self.role != 'data_entry':
+            return True  # Non-data entry users can see all
+            
+        if self.assigned_under == 'legal':
+            legal_agreements = [
+                'amc', 'bmc', 'input_services', 'consultant', 'cook', 
+                'distributer', 'milk_sale', 'mcc', 'mpacs', 'mpp_sahayak', 
+                'rta', 'godown', 'office_lease', 'guest_house'
+            ]
+            return agreement_type in legal_agreements
+            
+        elif self.assigned_under == 'logistic inward':
+            logistic_agreements = ['inward']
+            return agreement_type in logistic_agreements
+        elif self.assigned_under == 'logistic outward':
+            logistic_agreements = ['outward']
+            return agreement_type in logistic_agreements            
+        return False
+    
+    def can_assign_view_rights(self):
+        """Check if this user can assign view rights to others"""
+        can_assign = self.email == 'nikhil.agarwal@shwetdharamilk.com'
+        print(f"=== CHECKING ASSIGNMENT PERMISSION ===")
+        print(f"User: {self.email}")
+        print(f"Can assign view rights: {can_assign}")
+        return can_assign
+
+    def can_view_agreement_type(self, agreement_type):
+        """
+        Enhanced method to check if user can view specific agreement type
+        This replaces the existing can_access_agreement_type method logic
+        """
+        print(f"=== CHECKING AGREEMENT ACCESS ===")
+        print(f"User: {self.email}")
+        print(f"Agreement Type: {agreement_type}")
+        print(f"User Role: {self.role}")
+        print(f"User Assignment: {self.assigned_under}")
+        
+        # Use the ViewAssignment model to check permissions
+        return ViewAssignment.can_user_view_agreement(self, agreement_type)
+
+    def get_assigned_agreement_types(self):
+        """Get list of agreement types this user has been assigned to view"""
+        if self.email == 'nikhil.agarwal@shwetdharamilk.com':
+            # Nikhil can see all agreement types
+            return [choice[0] for choice in ViewAssignment.AGREEMENT_TYPE_CHOICES]
+        
+        # Get specifically assigned agreement types
+        assigned_types = ViewAssignment.objects.filter(
+            assigned_user=self,
+            is_active=True
+        ).values_list('agreement_type', flat=True)
+        
+        print(f"=== USER ASSIGNED AGREEMENTS ===")
+        print(f"User: {self.email}")
+        print(f"Assigned Types: {list(assigned_types)}")
+        
+        return list(assigned_types)
+    
+
+class MPPSahayakAgreement(models.Model):
+    AGREEMENT_STATUS_CHOICES = [
+        ('NEW', 'New Agreement'),
+        ('RENEWAL', 'Renewal'),
+        ('CLOSED', 'Closed'),
+    ]
+    
+    DOCUMENT_STATUS_CHOICES = [
+        ('INCOMPLETE', 'Incomplete'),
+        ('COMPLETE', 'Complete'),
+    ]
+    
+    CLOSED_CHOICES = [
+        ('YES', 'YES'),
+        ('NO', 'NO'),
+    ]
+
+    mcc = models.CharField(max_length=100)
+    mpp_code = models.CharField(max_length=50)
+    mpp_name = models.CharField(max_length=100)
+    sahayak_code = models.CharField(max_length=50)
+    sahayak_name = models.CharField(max_length=100)
+    agreement_status = models.CharField(
+        max_length=10,
+        choices=AGREEMENT_STATUS_CHOICES,
+        default='NEW'
+    )
+    sahayak_father_name = models.CharField(max_length=100, null=True, blank=True)
+    address = models.TextField()
+    mobile_number = models.CharField(max_length=15)
+    aadhar = models.CharField(max_length=20)
+    pan = models.CharField(max_length=20)
+    account_number = models.CharField(max_length=30)
+    ifsc_code = models.CharField(max_length=20)
+    agreement_date = models.DateField(blank=True, null=True)
+    document_status = models.CharField(
+        max_length=10,
+        choices=DOCUMENT_STATUS_CHOICES,
+        default='INCOMPLETE'
+    )
+    document_pending = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+    document = models.FileField(
+        upload_to='mpp_sahayak/',
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])],
+        help_text="PDF, JPG, or PNG (Max 5MB)"
+    )
+    
+    # Added closing fields
+    is_closed = models.CharField(
+        max_length=10, 
+        choices=CLOSED_CHOICES, 
+        default='NO',
+        blank=True, 
+        null=True
+    )
+    closing_date = models.DateField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        CustomUser, 
+        related_name='created_mppsahayakagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    updated_by = models.ForeignKey(
+        CustomUser, 
+        related_name='updated_mppsahayakagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "MPP/Sahayak Agreement"
+        verbose_name_plural = "MPP/Sahayak Agreements"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.mpp_name} - {self.sahayak_name} ({self.agreement_status})"
+
+
+class BaseAgreement(models.Model):
+    CLOSED_CHOICES = [
+        ('YES', 'YES'),
+        ('NO', 'NO'),
+    ]
+    
+    zone = models.CharField(max_length=100)
+    location = models.CharField(max_length=100)
+    contractor = models.CharField(max_length=100)
+    pan = models.CharField(max_length=20)
+    type_of_agreement = models.CharField(max_length=100)
+    agreement_date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    tenure_months = models.IntegerField()
+    lock_in_period = models.CharField(max_length=100)
+    monthly_payout = models.DecimalField(max_digits=12, decimal_places=2)
+    document_status = models.CharField(
+        max_length=20,
+        choices=[('INCOMPLETE', 'INCOMPLETE'), ('COMPLETE', 'COMPLETE'), ('EXPIRE', 'EXPIRE')],
+        default='INCOMPLETE'
+    )
+    document_pending = models.CharField(max_length=255, blank=True, null=True)
+    document = models.FileField(
+        upload_to='agreements/',
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])],
+        help_text="PDF, JPG, or PNG (Max 5MB)",
+        max_length=500
+    )
+    
+    # Added closing fields
+    is_closed = models.CharField(
+        max_length=10, 
+        choices=CLOSED_CHOICES, 
+        default='NO',
+        blank=True, 
+        null=True
+    )
+    closing_date = models.DateField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        CustomUser, 
+        related_name='created_%(class)s',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    updated_by = models.ForeignKey(
+        CustomUser, 
+        related_name='updated_%(class)s',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        abstract = True
+
+
+class AMCAgreement(models.Model):
+    CLOSED_CHOICES = [
+        ('YES', 'YES'),
+        ('NO', 'NO'),
+    ]
+    
+    product = models.CharField(max_length=100)
+    contractor = models.CharField(max_length=100)
+    pan = models.CharField(max_length=20)
+    type_of_agreement = models.CharField(max_length=100)
+    agreement_date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    tenure_months = models.IntegerField()
+    lock_in_period = models.CharField(max_length=100)
+    monthly_payout = models.DecimalField(max_digits=12, decimal_places=2)
+    document_status = models.CharField(
+        max_length=20,
+        choices=[('INCOMPLETE', 'INCOMPLETE'), ('COMPLETE', 'COMPLETE'), ('EXPIRE', 'EXPIRE')],
+        default='INCOMPLETE'
+    )
+    document_pending = models.CharField(max_length=255, blank=True, null=True)
+    document = models.FileField(
+        upload_to='amc_agreements/',
+        max_length=500,
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])],
+        help_text="PDF, JPG, or PNG (Max 5MB)"
+    )
+    
+    # Added closing fields
+    is_closed = models.CharField(
+        max_length=10, 
+        choices=CLOSED_CHOICES, 
+        default='NO',
+        blank=True, 
+        null=True
+    )
+    closing_date = models.DateField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        CustomUser, 
+        related_name='created_amcagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    updated_by = models.ForeignKey(
+        CustomUser, 
+        related_name='updated_amcagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.product} - {self.contractor}"
+    
+    class Meta:
+        verbose_name = "AMC Agreement"
+        verbose_name_plural = "AMC Agreements"
+
+
+class ConsultantAgreement(models.Model):
+    CLOSED_CHOICES = [
+        ('YES', 'YES'),
+        ('NO', 'NO'),
+    ]
+    
+    category = models.CharField(max_length=100)
+    contractor = models.CharField(max_length=100)
+    pan = models.CharField(max_length=20)
+    type_of_agreement = models.CharField(max_length=100)
+    agreement_date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    tenure_months = models.IntegerField()
+    lock_in_period = models.CharField(max_length=100)
+    monthly_payout = models.DecimalField(max_digits=12, decimal_places=2)
+    document_status = models.CharField(
+        max_length=20,
+        choices=[('INCOMPLETE', 'INCOMPLETE'), ('COMPLETE', 'COMPLETE'), ('EXPIRE', 'EXPIRE')],
+        default='INCOMPLETE'
+    )
+    document_pending = models.CharField(max_length=255, blank=True, null=True)
+    document = models.FileField(
+        upload_to='consultant_agreements/',
+        max_length=500,
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])],
+        help_text="PDF, JPG, or PNG (Max 5MB)"
+    )
+    
+    # Added closing fields
+    is_closed = models.CharField(
+        max_length=10, 
+        choices=CLOSED_CHOICES, 
+        default='NO',
+        blank=True, 
+        null=True
+    )
+    closing_date = models.DateField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        CustomUser, 
+        related_name='created_consultantagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    updated_by = models.ForeignKey(
+        CustomUser, 
+        related_name='updated_consultantagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.category} - {self.contractor}"
+    
+    class Meta:
+        verbose_name = "Consultant Agreement"
+        verbose_name_plural = "Consultant Agreements"
+    
+
+    
+class InputServicesAgreement(models.Model):
+    CLOSED_CHOICES = [
+        ('YES', 'YES'),
+        ('NO', 'NO'),
+    ]
+    
+    product = models.CharField(max_length=100)
+    contractor = models.CharField(max_length=100)
+    pan = models.CharField(max_length=20)
+    type_of_agreement = models.CharField(max_length=100)
+    agreement_date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    tenure_months = models.IntegerField()
+    lock_in_period = models.CharField(max_length=100)
+    monthly_payout = models.DecimalField(max_digits=12, decimal_places=2)
+    document_status = models.CharField(
+        max_length=20,
+        choices=[('INCOMPLETE', 'INCOMPLETE'), ('COMPLETE', 'COMPLETE'), ('EXPIRE', 'EXPIRE')],
+        default='INCOMPLETE'
+    )
+    document_pending = models.CharField(max_length=255, blank=True, null=True)
+    document = models.FileField(
+        upload_to='input_services_agreements/',
+        max_length=500,
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])],
+        help_text="PDF, JPG, or PNG (Max 5MB)"
+    )
+    
+    # Added closing fields
+    is_closed = models.CharField(
+        max_length=10, 
+        choices=CLOSED_CHOICES, 
+        default='NO',
+        blank=True, 
+        null=True
+    )
+    closing_date = models.DateField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        CustomUser, 
+        related_name='created_inputservicesagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    updated_by = models.ForeignKey(
+        CustomUser, 
+        related_name='updated_inputservicesagreements',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.product} - {self.contractor}"
+
+    class Meta:
+        verbose_name = "Input Services Agreement"
+        verbose_name_plural = "Input Services Agreements"
+
+class BMCAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "BMC Agreement"
+        verbose_name_plural = "BMC Agreements"
+
+
+class CookAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "Cook Agreement"
+        verbose_name_plural = "Cook Agreements"
+
+class DistributerAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "Distributer Agreement"
+        verbose_name_plural = "Distributer Agreements"
+
+class MilkSaleAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "Milk Sale Agreement"
+        verbose_name_plural = "Milk Sale Agreements"
+
+class MCCAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "MCC Agreement"
+        verbose_name_plural = "MCC Agreements"
+
+class MPACSAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "MPACS Agreement"
+        verbose_name_plural = "MPACS Agreements"
+
+class RentalBMCAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "Rental BMC Agreement"
+        verbose_name_plural = "Rental BMC Agreements"
+
+class GodownAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "Godown Agreement"
+        verbose_name_plural = "Godown Agreements"
+
+class OfficeLeaseAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "Office Lease Agreement"
+        verbose_name_plural = "Office Lease Agreements"
+
+class GuestHouseAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "Guest House Agreement"
+        verbose_name_plural = "Guest House Agreements"
+
+
+class RTAAgreement(BaseAgreement):
+    class Meta:
+        verbose_name = "RTA Agreement"
+        verbose_name_plural = "RTA Agreements"
+
+
+
+# MODELS FOR STORING USER ACTION IN THE DATABASE. 
+IST = timezone('Asia/Kolkata')  # Indian Standard Time
+
+class UserActionLog(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    path = models.CharField(max_length=500)
+    method = models.CharField(max_length=10)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    data = models.TextField(null=True, blank=True)  # JSON or key-value string of changes
+    changes = models.TextField(null=True, blank=True)  # Human-readable or JSON field describing what changed
+
+    def __str__(self):
+        return f"{self.user} - {self.method} - {self.path}"
+
+    def get_local_timestamp(self):
+        return localtime(self.timestamp, IST).strftime("%d-%m-%Y %I:%M %p")  # IST format
+
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+class InwardTransportAgreement(models.Model):
+    VEHICLE_TYPE_CHOICES = [
+        ('Diesel', 'Diesel'),
+        ('CNG', 'CNG'),
+        ('EV', 'EV'),
+        ('Petrol', 'Petrol'),
+    ]
+    
+    BODY_STRUCTURE_CHOICES = [
+        ('Open Body', 'Open Body'),
+        ('Semi Body', 'Semi Body'),
+    ]
+    
+    CLOSED_CHOICES = [
+        ('YES', 'YES'),
+        ('NO', 'NO'),
+    ]
+    
+    DOCUMENT_STATUS_CHOICES = [
+        ('COMPLETE', 'COMPLETE'),
+        ('INCOMPLETE', 'INCOMPLETE'),
+    ]
+
+    # Basic Information
+    location = models.CharField(max_length=100, blank=True, null=True)
+    route = models.CharField(max_length=100, blank=True, null=True)
+    vehicle_owner = models.CharField(max_length=100, blank=True, null=True)
+    mobile = models.CharField(max_length=15, blank=True, null=True)
+    
+    # Date Information
+    effective_date = models.DateField(blank=True, null=True)
+    term = models.CharField(max_length=50, blank=True, null=True)
+    expiry_date = models.DateField(blank=True, null=True)
+    
+    # Bank Details
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
+    account_no = models.CharField(max_length=50, blank=True, null=True)
+    bank_ifsc_code = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Identification Details
+    aadhar = models.CharField(max_length=20, blank=True, null=True)
+    pan = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Vehicle Information
+    vehicle_number = models.CharField(max_length=20, blank=True, null=True)
+    vehicle_type = models.CharField(
+        max_length=20, 
+        choices=VEHICLE_TYPE_CHOICES, 
+        blank=True, 
+        null=True
+    )
+    body_structure = models.CharField(
+        max_length=20, 
+        choices=BODY_STRUCTURE_CHOICES, 
+        blank=True, 
+        null=True
+    )
+    veh_reg = models.DateField(blank=True, null=True)
+    insurance_upto = models.DateField(blank=True, null=True)
+    pollution = models.CharField(max_length=50, blank=True, null=True)
+    fitness_certificate = models.CharField(max_length=50, blank=True, null=True)
+    
+    # FSSAI Information
+    fssai_number = models.CharField(max_length=50, blank=True, null=True)
+    fssai_upto = models.DateField(blank=True, null=True)
+    
+    # Status Information
+    is_closed = models.CharField(
+        max_length=10, 
+        choices=CLOSED_CHOICES, 
+        default='NO',
+        blank=True, 
+        null=True
+    )
+    closing_date = models.DateField(blank=True, null=True)
+    document_status = models.CharField(
+        max_length=20, 
+        choices=DOCUMENT_STATUS_CHOICES, 
+        blank=True, 
+        null=True
+    )
+    pending_document = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Document
+    document = models.FileField(
+        upload_to='inward_transport_agreements/%Y/%m/%d/', 
+        max_length=500, 
+        blank=True, 
+        null=True
+    )
+    
+    # System Fields
+    created_by = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Inward Transport Agreement"
+        verbose_name_plural = "Inward Transport Agreements"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.vehicle_number or 'No Vehicle'} - {self.location or 'No Location'}"
+
+    @property
+    def expire_months(self):
+        """Calculate how many months until expiry from today"""
+        if not self.expiry_date:
+            return 0
+            
+        today = timezone.now().date()
+        delta = self.expiry_date - today
+        return round(delta.days / 30) if delta.days > 0 else 0
+
+
+class OutwardTransportAgreement(models.Model):
+    FSSAI_STATUS = [
+        ('OK', 'OK'),
+        ('PENDING', 'PENDING'),
+        ('CLOSED', 'CLOSED'),
+        ('APPLY', 'APPLY'),
+    ]
+
+    DOCUMENT_STATUS = [
+        ('COMPLETE', 'COMPLETE'),
+        ('INCOMPLETE', 'INCOMPLETE'),
+    ]
+    
+    CLOSED_CHOICES = [
+        ('YES', 'YES'),
+        ('NO', 'NO'),
+    ]
+
+    # Basic Information
+    location = models.CharField(max_length=100)
+    unique_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    particular = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=15)
+    
+    # Date Information
+    effective_date = models.DateField()
+    term = models.CharField(max_length=50)
+    expiry_date = models.DateField()
+    
+    # Bank Details
+    bank_name = models.CharField(max_length=100)
+    account_no = models.CharField(max_length=50)
+    bank_ifsc_code = models.CharField(max_length=20)
+    
+    # Identification Details
+    aadhar = models.CharField(max_length=20)
+    pan = models.CharField(max_length=20)
+    
+    # Vehicle Information
+    veh_reg_date = models.DateField()
+    
+    # FSSAI Information
+    fssai = models.CharField(max_length=50)
+    fssai_status = models.CharField(max_length=20, choices=FSSAI_STATUS)
+    fssai_upto = models.DateField()
+    
+    # Status Information
+    is_closed = models.CharField(
+        max_length=10, 
+        choices=CLOSED_CHOICES, 
+        default='NO',
+        blank=True, 
+        null=True
+    )
+    closing_date = models.DateField(blank=True, null=True)
+    
+    # Document Status
+    document_status = models.CharField(max_length=20, choices=DOCUMENT_STATUS, default='INCOMPLETE')
+    pending_document = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Document
+    document = models.FileField(upload_to='outward_transport_agreements/%Y/%m/%d/', max_length=500)
+    
+    # System Fields
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Outward Transport Agreement"
+        verbose_name_plural = "Outward Transport Agreements"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.unique_code} - {self.location}"
+
+    @property
+    def expire_months(self):
+        """Calculate how many months until expiry from today"""
+        today = timezone.now().date()
+        delta = self.expiry_date - today
+        return round(delta.days / 30) if delta.days > 0 else 0
+    
+class AgreementEmailRecipient(models.Model):
+    """Model to store email recipients for different agreement types"""
+    
+    AGREEMENT_TYPE_CHOICES = [
+        ('AMCAgreement', 'AMC Agreement'),
+        ('BMCAgreement', 'BMC Agreement'),
+        ('InputServicesAgreement', 'Input Services Agreement'),
+        ('ConsultantAgreement', 'Consultant Agreement'),
+        ('CookAgreement', 'Cook Agreement'),
+        ('DistributerAgreement', 'Distributer Agreement'),
+        ('MilkSaleAgreement', 'Milk Sale Agreement'),
+        ('MCCAgreement', 'MCC Agreement'),
+        ('MPACSAgreement', 'MPACS Agreement'),
+        ('RTAAgreement', 'RTA Agreement'),
+        ('GodownAgreement', 'Godown Agreement'),
+        ('OfficeLeaseAgreement', 'Office Lease Agreement'),
+        ('GuestHouseAgreement', 'Guest House Agreement'),
+        ('InwardTransportAgreement', 'Inward Transport Agreement'),
+        ('OutwardTransportAgreement', 'Outward Transport Agreement'),
+        ('RentalBMCAgreement', 'Rental BMC Agreement'),
+        ('MPPSahayakAgreement', 'MPP Sahayak Agreement'),
+    ]
+    
+    RECIPIENT_TYPE_CHOICES = [
+        ('TO', 'To'),
+        ('CC', 'CC'),
+    ]
+    
+    agreement_type = models.CharField(
+        max_length=50,
+        choices=AGREEMENT_TYPE_CHOICES,
+        help_text="Type of agreement"
+    )
+    recipient_type = models.CharField(
+        max_length=2,
+        choices=RECIPIENT_TYPE_CHOICES,
+        help_text="Email recipient type (TO or CC)"
+    )
+    email_address = models.EmailField(
+        help_text="Email address of recipient"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this recipient is active"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Agreement Email Recipient"
+        verbose_name_plural = "Agreement Email Recipients"
+        unique_together = ['agreement_type', 'recipient_type', 'email_address']
+        ordering = ['agreement_type', 'recipient_type', 'email_address']
+    
+    def __str__(self):
+        return f"{self.get_agreement_type_display()} - {self.recipient_type}: {self.email_address}"
+
+class EmailSettings(models.Model):
+    """Model to store email configuration settings"""
+    
+    SETTING_CHOICES = [
+        ('EMAIL_HOST', 'SMTP Server'),
+        ('EMAIL_PORT', 'SMTP Port'),
+        ('EMAIL_USE_TLS', 'Use TLS'),
+        ('EMAIL_HOST_USER', 'SMTP Username'),
+        ('EMAIL_HOST_PASSWORD', 'SMTP Password'),
+        ('FROM_EMAIL', 'From Email Address'),
+        ('FROM_NAME', 'From Name'),
+    ]
+    
+    setting_key = models.CharField(
+        max_length=50,
+        choices=SETTING_CHOICES,
+        unique=True,
+        help_text="Email setting key"
+    )
+    setting_value = models.TextField(
+        help_text="Email setting value"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this setting is active"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Email Setting"
+        verbose_name_plural = "Email Settings"
+        ordering = ['setting_key']
+    
+    def __str__(self):
+        return f"{self.get_setting_key_display()}: {self.setting_value}"
+
+class MailSystemSettings(models.Model):
+    """Model to control mail system functionality"""
+    
+    MAIL_CHOICES = [
+        ('enabled', 'Enabled'),
+        ('disabled', 'Disabled'),
+    ]
+    
+    setting_name = models.CharField(max_length=100, unique=True, default='agreement_mail_system')
+    mail_status = models.CharField(max_length=20, choices=MAIL_CHOICES, default='enabled')
+    last_changed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    last_changed_at = models.DateTimeField(auto_now=True)
+    description = models.TextField(blank=True, null=True, default='Controls the agreement expiry notification system')
+    
+    class Meta:
+        verbose_name = "Mail System Setting"
+        verbose_name_plural = "Mail System Settings"
+    
+    def __str__(self):
+        return f"Mail System: {self.get_mail_status_display()}"
+    
+    @classmethod
+    def is_mail_enabled(cls):
+        """Check if mail system is enabled"""
+        try:
+            setting = cls.objects.get(setting_name='agreement_mail_system')
+            return setting.mail_status == 'enabled'
+        except cls.DoesNotExist:
+            # Create default setting if doesn't exist
+            cls.objects.create(
+                setting_name='agreement_mail_system',
+                mail_status='enabled'
+            )
+            return True
+    
+    @classmethod
+    def enable_mail_system(cls, user=None):
+        """Enable mail system"""
+        setting, created = cls.objects.get_or_create(
+            setting_name='agreement_mail_system',
+            defaults={'mail_status': 'enabled'}
+        )
+        setting.mail_status = 'enabled'
+        setting.last_changed_by = user
+        setting.save()
+        return setting
+    
+    @classmethod
+    def disable_mail_system(cls, user=None):
+        """Disable mail system"""
+        setting, created = cls.objects.get_or_create(
+            setting_name='agreement_mail_system',
+            defaults={'mail_status': 'disabled'}
+        )
+        setting.mail_status = 'disabled'
+        setting.last_changed_by = user
+        setting.save()
+        return setting
+    
+class ViewAssignment(models.Model):
+    """Model to track which users can view which agreement types"""
+    
+    AGREEMENT_TYPE_CHOICES = [
+        ('amc', 'AMC Agreement'),
+        ('bmc', 'BMC Agreement'),
+        ('input_services', 'Input Services Agreement'),
+        ('consultant', 'Consultant Agreement'),
+        ('cook', 'Cook Agreement'),
+        ('distributer', 'Distributer Agreement'),
+        ('milk_sale', 'Milk Sale Agreement'),
+        ('mcc', 'MCC Agreement'),
+        ('mpacs', 'MPACS Agreement'),
+        ('mpp_sahayak', 'MPP Sahayak Agreement'),
+        ('rta', 'RTA Agreement'),
+        ('godown', 'Godown Agreement'),
+        ('office_lease', 'Office Lease Agreement'),
+        ('guest_house', 'Guest House Agreement'),
+        ('inward', 'Inward Transport Agreement'),
+        ('outward', 'Outward Transport Agreement'),
+    ]
+    
+    # User who is assigned the view right
+    assigned_user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='view_assignments',
+        help_text="User who is assigned view rights"
+    )
+    
+    # Agreement type they can view
+    agreement_type = models.CharField(
+        max_length=50,
+        choices=AGREEMENT_TYPE_CHOICES,
+        help_text="Type of agreement user can view"
+    )
+    
+    # Who assigned this right (must be nikhil.agarwal@shwetdharamilk.com)
+    assigned_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='assigned_view_rights',
+        help_text="User who assigned this view right"
+    )
+    
+    # When was this assigned
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    
+    # Is this assignment active
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "View Assignment"
+        verbose_name_plural = "View Assignments"
+        # Prevent duplicate assignments
+        unique_together = ['assigned_user', 'agreement_type']
+        ordering = ['-assigned_at']
+    
+    def __str__(self):
+        return f"{self.assigned_user.email} can view {self.get_agreement_type_display()}"
+
+    @classmethod
+    def can_user_view_agreement(cls, user, agreement_type):
+        """
+        Check if a user can view a specific agreement type
+        Returns True if:
+        1. User is nikhil.agarwal@shwetdharamilk.com (can view all)
+        2. User has been assigned view rights for this agreement type
+        3. User is not a data_entry user (viewers/admins can see all by default)
+        """
+        print(f"=== CHECKING VIEW PERMISSION ===")
+        print(f"User: {user.email}")
+        print(f"Agreement Type: {agreement_type}")
+        print(f"User Role: {user.role}")
+        
+        # Nikhil can view everything
+        if user.email == 'nikhil.agarwal@shwetdharamilk.com':
+            print(f"✓ Nikhil has access to all agreements")
+            return True
+        
+        # Non-data entry users can view all (existing logic)
+        if user.role != 'data_entry':
+            print(f"✓ Non-data entry user has access to all agreements")
+            return True
+        
+        # Check if user has been specifically assigned this agreement type
+        has_assignment = cls.objects.filter(
+            assigned_user=user,
+            agreement_type=agreement_type,
+            is_active=True
+        ).exists()
+        
+        print(f"Has specific assignment: {has_assignment}")
+        
+        if has_assignment:
+            print(f"✓ User has been assigned view rights for {agreement_type}")
+            return True
+        else:
+            print(f"✗ User does not have view rights for {agreement_type}")
+            return False
+
+# ==================== ENHANCED DYNAMIC COMPLIANCE MODELS ====================
+
+# Add these models to your models.py file (after the existing compliance models)
+
+class MonthlyCompliance(models.Model):
+    """
+    Monthly compliance model - this will be our main model for tracking compliances
+    This bridges your existing Compliance model with the email system
+    """
+    
+    MONTH_CHOICES = [
+        (1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'),
+        (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'),
+        (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December')
+    ]
+    
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('IN_PROGRESS', 'In Progress'), 
+        ('COMPLETED', 'Completed'),
+        ('OVERDUE', 'Overdue'),
+        ('EXEMPTED', 'Exempted'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    # Link to your existing compliance system
+    compliance_type = models.ForeignKey(
+        'ComplianceType',
+        on_delete=models.CASCADE,
+        related_name='monthly_compliances'
+    )
+    department = models.ForeignKey(
+        'ComplianceDepartment',
+        on_delete=models.CASCADE,
+        related_name='monthly_compliances'
+    )
+    
+    # Period information
+    compliance_month = models.IntegerField(choices=MONTH_CHOICES)
+    compliance_year = models.IntegerField()
+    
+    # Dates
+    due_date = models.DateField()
+    actual_completion_date = models.DateField(blank=True, null=True)
+    
+    # Financial Information
+    amount_due = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    amount_deposited = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    penalty_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True, default=0)
+    
+    # Status and tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    remarks = models.TextField(blank=True, null=True)
+    
+    # Document upload
+    compliance_document = models.FileField(
+        upload_to='compliance_documents/%Y/%m/',
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png', 'xlsx', 'docx'])],
+        help_text="Upload compliance document (PDF, JPG, PNG, XLSX, DOCX - Max 5MB)",
+        blank=True,
+        null=True
+    )
+    
+    # Email tracking
+    reminder_sent_count = models.IntegerField(default=0)
+    last_reminder_sent = models.DateTimeField(blank=True, null=True)
+    escalation_sent_count = models.IntegerField(default=0)
+    last_escalation_sent = models.DateTimeField(blank=True, null=True)
+    email_tracking_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    
+    # System fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_monthly_compliances'
+    )
+    completed_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='completed_monthly_compliances'
+    )
+    initial_notification_sent = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="Timestamp when initial compliance notification was sent"
+    )
+    
+    class Meta:
+        verbose_name = "Monthly Compliance"
+        verbose_name_plural = "Monthly Compliances"
+        unique_together = ['compliance_type', 'compliance_month', 'compliance_year']
+        ordering = ['-due_date', 'compliance_type__name']
+    
+    def __str__(self):
+        month_name = dict(self.MONTH_CHOICES)[self.compliance_month]
+        return f"{self.compliance_type.name} - {month_name} {self.compliance_year}"
+    
+    def save(self, *args, **kwargs):
+        # Generate unique tracking ID if not exists
+        if not self.email_tracking_id:
+            self.email_tracking_id = f"COMP-{uuid.uuid4().hex[:8]}-{self.compliance_type.id}-{self.id or 0}"
+        
+        # Auto-update status based on completion
+        if self.actual_completion_date and self.status not in ['COMPLETED', 'EXEMPTED', 'CANCELLED']:
+            self.status = 'COMPLETED'
+        elif not self.actual_completion_date and self.is_overdue and self.status == 'PENDING':
+            self.status = 'OVERDUE'
+            
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_overdue(self):
+        """Check if compliance is overdue"""
+        if self.status in ['COMPLETED', 'EXEMPTED', 'CANCELLED']:
+            return False
+        return self.due_date < datetime.now().date()
+    
+    @property
+    def days_until_due(self):
+        """Calculate days until due date"""
+        today = datetime.now().date()
+        delta = self.due_date - today
+        return delta.days
+    
+    @property
+    def days_overdue(self):
+        """Calculate days overdue (0 if not overdue)"""
+        today = datetime.now().date()
+        if self.due_date >= today:
+            return 0
+        return (today - self.due_date).days
+
+class ComplianceFrequency(models.Model):
+    """Model to define different compliance frequencies"""
+    FREQUENCY_CHOICES = [
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+        ('HALF_YEARLY', 'Half Yearly'),
+        ('ANNUALLY', 'Annually'),
+        ('CUSTOM', 'Custom Period'),
+    ]
+    
+    name = models.CharField(max_length=50, choices=FREQUENCY_CHOICES, unique=True)
+    display_name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Compliance Frequency"
+        verbose_name_plural = "Compliance Frequencies"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+class ComplianceDepartment(models.Model):
+    """Model to store departments responsible for compliances"""
+    name = models.CharField(max_length=100, unique=True)
+    head_email = models.EmailField(help_text="Department head email for notifications")
+    cc_emails = models.TextField(
+        blank=True, 
+        null=True,
+        help_text="Comma-separated CC email addresses for this department"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Compliance Department"
+        verbose_name_plural = "Compliance Departments"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def get_cc_emails_list(self):
+        """Return list of CC emails for this department"""
+        if self.cc_emails:
+            return [email.strip() for email in self.cc_emails.split(',') if email.strip()]
+        return []
+
+class ComplianceType(models.Model):
+    """Model to store different types of compliances with dynamic configuration"""
+    name = models.CharField(max_length=200, unique=True)
+    description = models.TextField(blank=True, null=True)
+    frequency = models.ForeignKey(
+        ComplianceFrequency,
+        on_delete=models.CASCADE,
+        related_name='compliance_types',
+        null=True,
+        blank=True
+    )
+    department = models.ForeignKey(
+        ComplianceDepartment,
+        on_delete=models.CASCADE,
+        related_name='compliance_types',
+        null=True,
+        blank=True
+    )
+    
+    # Due date calculation
+    due_day_of_month = models.IntegerField(
+        null=True, 
+        blank=True,
+        help_text="Day of month when compliance is due (1-31). For monthly/quarterly/annual compliances."
+    )
+    due_days_after_period_end = models.IntegerField(
+        default=0,
+        help_text="Number of days after period end when compliance is due"
+    )
+    
+    # Email configuration
+    send_reminder_emails = models.BooleanField(default=True)
+    reminder_days_before = models.IntegerField(
+        default=7,
+        help_text="Send reminder email X days before due date"
+    )
+    escalation_days_after = models.IntegerField(
+        default=3,
+        help_text="Send escalation email X days after due date"
+    )
+    
+    # Custom period configuration (for custom frequency)
+    custom_period_months = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="For custom frequency: number of months in the period"
+    )
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = "Compliance Type"
+        verbose_name_plural = "Compliance Types"
+        ordering = ['name']
+    
+    def __str__(self):
+        if self.frequency and hasattr(self.frequency, 'display_name'):
+            return f"{self.name} ({self.frequency.display_name})"
+        else:
+            return f"{self.name} (No Frequency Set)"
+    
+    def calculate_due_date(self, period_start_date, period_end_date=None):
+        """Calculate due date for this compliance type based on period"""
+        from datetime import timedelta
+        from calendar import monthrange
+        
+        if self.frequency.name == 'MONTHLY':
+            # For monthly: due on specific day of next month
+            if self.due_day_of_month:
+                year = period_start_date.year
+                month = period_start_date.month + 1
+                if month > 12:
+                    month = 1
+                    year += 1
+                
+                # Handle cases where due day doesn't exist in the month (e.g., 31st in February)
+                max_day = monthrange(year, month)[1]
+                due_day = min(self.due_day_of_month, max_day)
+                
+                return period_start_date.replace(year=year, month=month, day=due_day)
+            else:
+                # Default: due_days_after_period_end after month end
+                if period_end_date:
+                    return period_end_date + timedelta(days=self.due_days_after_period_end)
+                else:
+                    # Calculate month end
+                    year = period_start_date.year
+                    month = period_start_date.month + 1
+                    if month > 12:
+                        month = 1
+                        year += 1
+                    month_end = period_start_date.replace(year=year, month=month, day=1) - timedelta(days=1)
+                    return month_end + timedelta(days=self.due_days_after_period_end)
+        
+        elif self.frequency.name in ['QUARTERLY', 'HALF_YEARLY', 'ANNUALLY']:
+            # For these frequencies, period_end_date should be provided
+            if period_end_date:
+                return period_end_date + timedelta(days=self.due_days_after_period_end)
+            else:
+                # Fallback calculation
+                return period_start_date + timedelta(days=self.due_days_after_period_end)
+        
+        elif self.frequency.name == 'CUSTOM':
+            # For custom frequency
+            if period_end_date:
+                return period_end_date + timedelta(days=self.due_days_after_period_end)
+            else:
+                # Use custom_period_months to calculate
+                months_to_add = self.custom_period_months or 1
+                year = period_start_date.year
+                month = period_start_date.month + months_to_add
+                while month > 12:
+                    month -= 12
+                    year += 1
+                period_end = period_start_date.replace(year=year, month=month) - timedelta(days=1)
+                return period_end + timedelta(days=self.due_days_after_period_end)
+        
+        # Default fallback
+        return period_start_date + timedelta(days=30)
+
+class CompliancePeriod(models.Model):
+    """Model to define specific compliance periods (e.g., Q1 2025, January 2025, FY 2025, etc.)"""
+    PERIOD_TYPE_CHOICES = [
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+        ('HALF_YEARLY', 'Half Yearly'),
+        ('ANNUALLY', 'Annually'),
+        ('CUSTOM', 'Custom'),
+    ]
+    
+    MONTH_CHOICES = [
+        (1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'),
+        (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'),
+        (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December')
+    ]
+    
+    QUARTER_CHOICES = [
+        (1, 'Q1 (Jan-Mar)'),
+        (2, 'Q2 (Apr-Jun)'),
+        (3, 'Q3 (Jul-Sep)'),
+        (4, 'Q4 (Oct-Dec)'),
+    ]
+    
+    period_type = models.CharField(max_length=20, choices=PERIOD_TYPE_CHOICES)
+    year = models.IntegerField()
+    
+    # For monthly periods
+    month = models.IntegerField(choices=MONTH_CHOICES, null=True, blank=True)
+    
+    # For quarterly periods
+    quarter = models.IntegerField(choices=QUARTER_CHOICES, null=True, blank=True)
+    
+    # For custom periods
+    period_name = models.CharField(max_length=100, blank=True, null=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    
+    # Display name (auto-generated or custom)
+    display_name = models.CharField(max_length=100)
+    
+    class Meta:
+        verbose_name = "Compliance Period"
+        verbose_name_plural = "Compliance Periods"
+        unique_together = ['period_type', 'year', 'month', 'quarter']
+        ordering = ['-year', '-month', '-quarter']
+    
+    def __str__(self):
+        return self.display_name
+    
+    def save(self, *args, **kwargs):
+        if not self.display_name:
+            self.display_name = self.generate_display_name()
+        super().save(*args, **kwargs)
+    
+    def generate_display_name(self):
+        """Generate display name based on period type"""
+        if self.period_type == 'MONTHLY' and self.month:
+            month_name = dict(self.MONTH_CHOICES)[self.month]
+            return f"{month_name} {self.year}"
+        elif self.period_type == 'QUARTERLY' and self.quarter:
+            quarter_name = dict(self.QUARTER_CHOICES)[self.quarter]
+            return f"{quarter_name} {self.year}"
+        elif self.period_type == 'HALF_YEARLY':
+            half = 'H1' if self.month and self.month <= 6 else 'H2'
+            return f"{half} {self.year}"
+        elif self.period_type == 'ANNUALLY':
+            return f"FY {self.year}"
+        elif self.period_type == 'CUSTOM' and self.period_name:
+            return f"{self.period_name} {self.year}"
+        else:
+            return f"{self.period_type} {self.year}"
+
+class Compliance(models.Model):
+    """Dynamic compliance model that can handle any type of compliance"""
+    
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('IN_PROGRESS', 'In Progress'), 
+        ('COMPLETED', 'Completed'),
+        ('OVERDUE', 'Overdue'),
+        ('EXEMPTED', 'Exempted'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    # Core fields
+    compliance_type = models.ForeignKey(
+        ComplianceType,
+        on_delete=models.CASCADE,
+        related_name='compliances'
+    )
+    period = models.ForeignKey(
+        CompliancePeriod,
+        on_delete=models.CASCADE,
+        related_name='compliances'
+    )
+    
+    # Dates
+    due_date = models.DateField()
+    actual_completion_date = models.DateField(blank=True, null=True)
+    
+    # Document and Financial Information
+    compliance_document_no = models.CharField(max_length=100, blank=True, null=True)
+    amount_due = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    amount_deposited = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    penalty_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True, default=0)
+    
+    # Status and tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    remarks = models.TextField(blank=True, null=True)
+    
+    # Document upload
+    compliance_document = models.FileField(
+        upload_to='compliance_documents/%Y/%m/',
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png', 'xlsx', 'docx'])],
+        help_text="Upload compliance document (PDF, JPG, PNG, XLSX, DOCX - Max 5MB)",
+        blank=True,
+        null=True
+    )
+    
+    # Email tracking
+    reminder_sent_count = models.IntegerField(default=0)
+    last_reminder_sent = models.DateTimeField(blank=True, null=True)
+    escalation_sent_count = models.IntegerField(default=0)
+    last_escalation_sent = models.DateTimeField(blank=True, null=True)
+    email_tracking_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    
+    # System fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_compliances'
+    )
+    completed_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='completed_compliances'
+    )
+    initial_notification_sent = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="Timestamp when initial compliance notification was sent"
+    )
+    
+    class Meta:
+        verbose_name = "Compliance"
+        verbose_name_plural = "Compliances"
+        unique_together = ['compliance_type', 'period']
+        ordering = ['-due_date', 'compliance_type__name']
+    
+    def __str__(self):
+        return f"{self.compliance_type.name} - {self.period.display_name}"
+    
+    def save(self, *args, **kwargs):
+        # Generate unique tracking ID if not exists
+        if not self.email_tracking_id:
+            self.email_tracking_id = f"COMP-{uuid.uuid4().hex[:8]}-{self.compliance_type.id}-{self.period.id}"
+        
+        # Auto-update status based on completion
+        if self.actual_completion_date and self.status not in ['COMPLETED', 'EXEMPTED', 'CANCELLED']:
+            self.status = 'COMPLETED'
+        elif not self.actual_completion_date and self.is_overdue and self.status == 'PENDING':
+            self.status = 'OVERDUE'
+            
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_overdue(self):
+        """Check if compliance is overdue"""
+        if self.status in ['COMPLETED', 'EXEMPTED', 'CANCELLED']:
+            return False
+        return self.due_date < datetime.now().date()
+    
+    @property
+    def days_until_due(self):
+        """Calculate days until due date"""
+        today = datetime.now().date()
+        delta = self.due_date - today
+        return delta.days
+    
+    @property
+    def days_overdue(self):
+        """Calculate days overdue (0 if not overdue)"""
+        today = datetime.now().date()
+        if self.due_date >= today:
+            return 0
+        return (today - self.due_date).days
+    
+    def mark_completed(self, user=None, document=None, completion_date=None, remarks=None):
+        """Mark compliance as completed"""
+        self.status = 'COMPLETED'
+        self.actual_completion_date = completion_date or datetime.now().date()
+        self.completed_by = user
+        if document:
+            self.compliance_document = document
+        if remarks:
+            self.remarks = remarks
+        self.save()
+    
+    def send_reminder_email(self):
+        """Send reminder email for this compliance"""
+        try:
+            from .management.commands.compliance_email_manager import ComplianceEmailManager
+            email_manager = ComplianceEmailManager()
+            return email_manager.send_compliance_reminder(self)
+        except ImportError:
+            return False
+    
+    def send_escalation_email(self):
+        """Send escalation email for overdue compliance"""
+        try:
+            from .management.commands.compliance_email_manager import ComplianceEmailManager
+            email_manager = ComplianceEmailManager()
+            return email_manager.send_compliance_escalation(self)
+        except ImportError:
+            return False
+
+class ComplianceEmailLog(models.Model):
+    """Model to track compliance email communications"""
+    
+    EMAIL_TYPE_CHOICES = [
+        ('REMINDER', 'Reminder'),
+        ('ESCALATION', 'Escalation'),
+        ('COMPLETION_NOTIFICATION', 'Completion Notification'),
+        ('STATUS_UPDATE', 'Status Update'),
+    ]
+    
+    compliance = models.ForeignKey(
+        Compliance,
+        on_delete=models.CASCADE,
+        related_name='email_logs'
+    )
+    email_type = models.CharField(max_length=30, choices=EMAIL_TYPE_CHOICES)
+    recipients = models.TextField(help_text="Comma-separated list of email recipients")
+    cc_recipients = models.TextField(blank=True, null=True, help_text="Comma-separated list of CC recipients")
+    subject = models.CharField(max_length=300)
+    email_content = models.TextField(blank=True, null=True)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    is_successful = models.BooleanField(default=True)
+    error_message = models.TextField(blank=True, null=True)
+    
+    # Email reply tracking
+    reply_received = models.BooleanField(default=False)
+    reply_processed_at = models.DateTimeField(blank=True, null=True)
+    reply_content = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Compliance Email Log"
+        verbose_name_plural = "Compliance Email Logs"
+        ordering = ['-sent_at']
+    
+    def __str__(self):
+        return f"{self.email_type} - {self.compliance} - {self.sent_at.strftime('%Y-%m-%d %H:%M')}"
+
+class ComplianceEmailSettings(models.Model):
+    """Model to store compliance email configuration"""
+    
+    SETTING_CHOICES = [
+        ('REMINDER_DAYS_BEFORE', 'Default days before due date to send reminder'),
+        ('ESCALATION_DAYS_AFTER', 'Default days after due date to escalate'),
+        ('MAX_REMINDERS', 'Maximum number of reminders to send'),
+        ('MAX_ESCALATIONS', 'Maximum number of escalations to send'),
+        ('CC_EMAILS', 'Default CC email addresses'),
+        ('ESCALATION_EMAILS', 'Escalation email addresses'),
+        ('EMAIL_TEMPLATE_REMINDER', 'Reminder email template'),
+        ('EMAIL_TEMPLATE_ESCALATION', 'Escalation email template'),
+        ('EMAIL_TEMPLATE_COMPLETION', 'Completion notification template'),
+        ('EMAIL_ENABLED', 'Enable/disable email system'),
+        ('AUTO_MARK_COMPLETED_ON_REPLY', 'Auto-mark completed when reply contains "DONE"'),
+    ]
+    
+    setting_key = models.CharField(
+        max_length=50,
+        choices=SETTING_CHOICES,
+        unique=True
+    )
+    setting_value = models.TextField()
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = "Compliance Email Setting"
+        verbose_name_plural = "Compliance Email Settings"
+        ordering = ['setting_key']
+    
+    def __str__(self):
+        return f"{self.get_setting_key_display()}: {self.setting_value[:50]}"
+    
+    @classmethod
+    def get_setting(cls, key, default=None):
+        """Get a setting value by key"""
+        try:
+            setting = cls.objects.get(setting_key=key, is_active=True)
+            return setting.setting_value
+        except cls.DoesNotExist:
+            return default
+    
+    @classmethod
+    def is_email_enabled(cls):
+        """Check if email system is enabled"""
+        return cls.get_setting('EMAIL_ENABLED', 'true').lower() == 'true'
+
+class ComplianceTemplate(models.Model):
+    """Model to store compliance templates for bulk creation"""
+    
+    name = models.CharField(max_length=200, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Template configuration
+    compliance_types = models.ManyToManyField(
+        ComplianceType,
+        related_name='templates',
+        help_text="Compliance types included in this template"
+    )
+    
+    # Auto-generation settings
+    auto_generate_for_year = models.BooleanField(
+        default=False,
+        help_text="Automatically generate all periods for a year"
+    )
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = "Compliance Template"
+        verbose_name_plural = "Compliance Templates"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def generate_compliances_for_year(self, year, user=None):
+        """Generate all compliances for a given year based on this template"""
+        from datetime import date
+        from calendar import monthrange
+        
+        created_compliances = []
+        
+        for compliance_type in self.compliance_types.all():
+            periods_created = []
+            
+            if compliance_type.frequency.name == 'MONTHLY':
+                # Create 12 monthly compliances
+                for month in range(1, 13):
+                    # Create or get period
+                    period, created = CompliancePeriod.objects.get_or_create(
+                        period_type='MONTHLY',
+                        year=year,
+                        month=month,
+                        defaults={
+                            'start_date': date(year, month, 1),
+                            'end_date': date(year, month, monthrange(year, month)[1])
+                        }
+                    )
+                    periods_created.append(period)
+                    
+            elif compliance_type.frequency.name == 'QUARTERLY':
+                # Create 4 quarterly compliances
+                quarters = [
+                    (1, 1, 3),  # Q1: Jan-Mar
+                    (2, 4, 6),  # Q2: Apr-Jun
+                    (3, 7, 9),  # Q3: Jul-Sep
+                    (4, 10, 12)  # Q4: Oct-Dec
+                ]
+                
+                for quarter, start_month, end_month in quarters:
+                    period, created = CompliancePeriod.objects.get_or_create(
+                        period_type='QUARTERLY',
+                        year=year,
+                        quarter=quarter,
+                        defaults={
+                            'start_date': date(year, start_month, 1),
+                            'end_date': date(year, end_month, monthrange(year, end_month)[1])
+                        }
+                    )
+                    periods_created.append(period)
+                    
+            elif compliance_type.frequency.name == 'HALF_YEARLY':
+                # Create 2 half-yearly compliances
+                halves = [
+                    (1, 1, 6),   # H1: Jan-Jun
+                    (2, 7, 12)   # H2: Jul-Dec
+                ]
+                
+                for half, start_month, end_month in halves:
+                    period, created = CompliancePeriod.objects.get_or_create(
+                        period_type='HALF_YEARLY',
+                        year=year,
+                        month=start_month,  # Use month to distinguish H1/H2
+                        defaults={
+                            'start_date': date(year, start_month, 1),
+                            'end_date': date(year, end_month, monthrange(year, end_month)[1]),
+                            'display_name': f"H{half} {year}"
+                        }
+                    )
+                    periods_created.append(period)
+                    
+            elif compliance_type.frequency.name == 'ANNUALLY':
+                # Create 1 annual compliance
+                period, created = CompliancePeriod.objects.get_or_create(
+                    period_type='ANNUALLY',
+                    year=year,
+                    defaults={
+                        'start_date': date(year, 1, 1),
+                        'end_date': date(year, 12, 31),
+                        'display_name': f"FY {year}"
+                    }
+                )
+                periods_created.append(period)
+            
+            # Create compliance records for each period
+            for period in periods_created:
+                due_date = compliance_type.calculate_due_date(period.start_date, period.end_date)
+                
+                compliance, created = Compliance.objects.get_or_create(
+                    compliance_type=compliance_type,
+                    period=period,
+                    defaults={
+                        'due_date': due_date,
+                        'created_by': user
+                    }
+                )
+                
+                if created:
+                    created_compliances.append(compliance)
+        
+        return created_compliances
+
+class ComplianceReplyProcessing(models.Model):
+    """Model to track email replies and automatic processing - UPDATED TO SUPPORT BOTH MODELS"""
+    
+    # CHANGE: Make compliance_id more flexible to support both models
+    compliance_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="ID of the compliance record (supports both Compliance and MonthlyCompliance)"
+    )
+    compliance_type_name = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text="Type of compliance model (Compliance or MonthlyCompliance)"
+    )
+    
+    sender_email = models.EmailField()
+    reply_subject = models.CharField(max_length=300)
+    reply_body = models.TextField()
+    contains_done_keyword = models.BooleanField(default=False)
+    has_attachment = models.BooleanField(default=False)
+    attachment_saved = models.BooleanField(default=False)
+    attachment_path = models.CharField(max_length=500, blank=True, null=True)
+    processed_successfully = models.BooleanField(default=False)
+    processing_error = models.TextField(blank=True, null=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Compliance Reply Processing"
+        verbose_name_plural = "Compliance Reply Processing"
+        ordering = ['-received_at']
+    
+    def __str__(self):
+        return f"Reply for {self.compliance_type_name}({self.compliance_id}) from {self.sender_email}"
+
+class ComplianceActionLog(models.Model):
+    """Model to track all compliance-related actions - UPDATED TO SUPPORT BOTH MODELS"""
+    
+    ACTION_CHOICES = [
+        ('COMPLIANCE_CREATED', 'Compliance Created'),
+        ('COMPLIANCE_UPDATED', 'Compliance Updated'),
+        ('COMPLIANCE_COMPLETED', 'Compliance Completed'),
+        ('COMPLIANCE_CANCELLED', 'Compliance Cancelled'),
+        ('COMPLIANCE_EXEMPTED', 'Compliance Exempted'),
+        ('EMAIL_SENT', 'Email Sent'),
+        ('EMAIL_REPLY_RECEIVED', 'Email Reply Received'),
+        ('DOCUMENT_UPLOADED', 'Document Uploaded'),
+        ('STATUS_CHANGED', 'Status Changed'),
+        ('BULK_CREATED', 'Bulk Compliances Created'),
+        ('TEMPLATE_APPLIED', 'Template Applied'),
+    ]
+    
+    # CHANGE: Make compliance_id more flexible to support both models
+    compliance_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="ID of the compliance record (supports both Compliance and MonthlyCompliance)"
+    )
+    compliance_type_name = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text="Type of compliance model (Compliance or MonthlyCompliance)"
+    )
+    
+    action_type = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    description = models.TextField()
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    additional_data = models.JSONField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Compliance Action Log"
+        verbose_name_plural = "Compliance Action Logs"
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        compliance_info = f" - {self.compliance_type_name}({self.compliance_id})" if self.compliance_id else ""
+        return f"{self.action_type}{compliance_info} - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+    
+
+class ComplianceDashboard(models.Model):
+    """Model to store dashboard configurations and user preferences"""
+    
+    DASHBOARD_TYPE_CHOICES = [
+        ('OVERVIEW', 'Overview Dashboard'),
+        ('DEPARTMENT', 'Department Dashboard'),
+        ('PERSONAL', 'Personal Dashboard'),
+        ('EXECUTIVE', 'Executive Dashboard'),
+    ]
+    
+    name = models.CharField(max_length=100)
+    dashboard_type = models.CharField(max_length=20, choices=DASHBOARD_TYPE_CHOICES)
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='compliance_dashboards',
+        null=True,
+        blank=True,
+        help_text="User this dashboard belongs to (null for system dashboards)"
+    )
+    department = models.ForeignKey(
+        ComplianceDepartment,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Department this dashboard is for"
+    )
+    
+    # Dashboard configuration
+    show_overdue = models.BooleanField(default=True)
+    show_due_soon = models.BooleanField(default=True)
+    due_soon_days = models.IntegerField(default=7)
+    show_completed = models.BooleanField(default=True)
+    show_pending = models.BooleanField(default=True)
+    
+    # Filters
+    compliance_types = models.ManyToManyField(
+        ComplianceType,
+        blank=True,
+        help_text="Filter by specific compliance types (empty = all)"
+    )
+    
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Compliance Dashboard"
+        verbose_name_plural = "Compliance Dashboards"
+        ordering = ['dashboard_type', 'name']
+    
+    def __str__(self):
+        owner = f" - {self.user.email}" if self.user else ""
+        dept = f" - {self.department.name}" if self.department else ""
+        return f"{self.name} ({self.get_dashboard_type_display()}){owner}{dept}"
+
+class ComplianceReminder(models.Model):
+    """Model to manage automated compliance reminders"""
+    
+    REMINDER_TYPE_CHOICES = [
+        ('EMAIL', 'Email'),
+        ('SMS', 'SMS'),
+        ('SYSTEM_NOTIFICATION', 'System Notification'),
+        ('SLACK', 'Slack Message'),
+    ]
+    
+    FREQUENCY_CHOICES = [
+        ('ONCE', 'Send Once'),
+        ('DAILY', 'Daily'),
+        ('WEEKLY', 'Weekly'),
+    ]
+    
+    compliance_type = models.ForeignKey(
+        ComplianceType,
+        on_delete=models.CASCADE,
+        related_name='reminders'
+    )
+    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES)
+    days_before_due = models.IntegerField(help_text="Send reminder X days before due date")
+    frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='ONCE')
+    
+    # Recipients
+    recipient_emails = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Comma-separated email addresses (overrides department defaults)"
+    )
+    include_department_head = models.BooleanField(default=True)
+    include_department_cc = models.BooleanField(default=True)
+    
+    # Message template
+    subject_template = models.CharField(max_length=300, blank=True, null=True)
+    message_template = models.TextField(blank=True, null=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = "Compliance Reminder"
+        verbose_name_plural = "Compliance Reminders"
+        ordering = ['compliance_type', 'days_before_due']
+    
+    def __str__(self):
+        return f"{self.compliance_type.name} - {self.days_before_due} days before - {self.reminder_type}"
+
+class ComplianceReport(models.Model):
+    """Model to store generated compliance reports"""
+    
+    REPORT_TYPE_CHOICES = [
+        ('MONTHLY_SUMMARY', 'Monthly Summary'),
+        ('QUARTERLY_SUMMARY', 'Quarterly Summary'),
+        ('ANNUAL_SUMMARY', 'Annual Summary'),
+        ('OVERDUE_REPORT', 'Overdue Compliances'),
+        ('DEPARTMENT_REPORT', 'Department Report'),
+        ('COMPLIANCE_TYPE_REPORT', 'Compliance Type Report'),
+        ('CUSTOM_REPORT', 'Custom Report'),
+    ]
+    
+    FORMAT_CHOICES = [
+        ('PDF', 'PDF'),
+        ('EXCEL', 'Excel'),
+        ('CSV', 'CSV'),
+        ('JSON', 'JSON'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    report_type = models.CharField(max_length=30, choices=REPORT_TYPE_CHOICES)
+    format = models.CharField(max_length=10, choices=FORMAT_CHOICES)
+    
+    # Report parameters
+    start_date = models.DateField()
+    end_date = models.DateField()
+    departments = models.ManyToManyField(
+        ComplianceDepartment,
+        blank=True,
+        help_text="Departments to include (empty = all)"
+    )
+    compliance_types = models.ManyToManyField(
+        ComplianceType,
+        blank=True,
+        help_text="Compliance types to include (empty = all)"
+    )
+    
+    # Report file
+    report_file = models.FileField(
+        upload_to='compliance_reports/%Y/%m/',
+        null=True,
+        blank=True
+    )
+    
+    # Generation info
+    generated_at = models.DateTimeField(auto_now_add=True)
+    generated_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    generation_time_seconds = models.FloatField(null=True, blank=True)
+    total_records = models.IntegerField(null=True, blank=True)
+    
+    # Access control
+    is_public = models.BooleanField(default=False)
+    allowed_users = models.ManyToManyField(
+        CustomUser,
+        blank=True,
+        related_name='accessible_compliance_reports'
+    )
+    
+    class Meta:
+        verbose_name = "Compliance Report"
+        verbose_name_plural = "Compliance Reports"
+        ordering = ['-generated_at']
+    
+    def __str__(self):
+        return f"{self.name} - {self.generated_at.strftime('%Y-%m-%d %H:%M')}"
+
+# ==================== UTILITY MODELS ====================
+
+class ComplianceSystemSettings(models.Model):
+    """Global system settings for compliance management"""
+    
+    SETTING_CHOICES = [
+        ('SYSTEM_ENABLED', 'Enable/Disable Compliance System'),
+        ('EMAIL_SYSTEM_ENABLED', 'Enable/Disable Email System'),
+        ('AUTO_GENERATION_ENABLED', 'Enable/Disable Auto-generation'),
+        ('DEFAULT_FINANCIAL_YEAR_START', 'Default Financial Year Start Month'),
+        ('DEFAULT_TIMEZONE', 'Default Timezone'),
+        ('REMINDER_BATCH_SIZE', 'Number of reminders to process in one batch'),
+        ('EMAIL_RATE_LIMIT', 'Maximum emails per hour'),
+        ('AUTO_ARCHIVE_COMPLETED_DAYS', 'Auto-archive completed compliances after X days'),
+        ('DASHBOARD_REFRESH_INTERVAL', 'Dashboard auto-refresh interval (minutes)'),
+    ]
+    
+    setting_key = models.CharField(
+        max_length=50,
+        choices=SETTING_CHOICES,
+        unique=True
+    )
+    setting_value = models.TextField()
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = "Compliance System Setting"
+        verbose_name_plural = "Compliance System Settings"
+        ordering = ['setting_key']
+    
+    def __str__(self):
+        return f"{self.get_setting_key_display()}: {self.setting_value}"
+    
+    @classmethod
+    def get_setting(cls, key, default=None):
+        """Get a setting value by key"""
+        try:
+            setting = cls.objects.get(setting_key=key, is_active=True)
+            return setting.setting_value
+        except cls.DoesNotExist:
+            return default
+    
+    @classmethod
+    def is_system_enabled(cls):
+        """Check if compliance system is enabled"""
+        return cls.get_setting('SYSTEM_ENABLED', 'true').lower() == 'true'
