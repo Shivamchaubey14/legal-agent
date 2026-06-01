@@ -4,64 +4,415 @@
 
 {% block extra_css %}
 <style>
-.dash-shell {
-  max-width: 1100px; margin: 0 auto;
-  padding: 40px 24px;
-}
-.dash-hero {
-  margin-bottom: 36px;
-  display: flex; align-items: flex-end; justify-content: space-between;
-  flex-wrap: wrap; gap: 16px;
-}
-.dash-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 32px; color: var(--txt);
-  letter-spacing: -0.02em; line-height: 1.1;
-}
-.dash-title span { color: var(--gold); font-style: italic; }
-.dash-sub { font-size: 13px; color: var(--txt3); margin-top: 6px; }
+  .dash-shell {
+    max-width: 1100px; margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
 
-.empty-state {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 16px;
-  padding: 80px 24px;
-  background: var(--surface);
-  border: 1px dashed var(--border3);
-  border-radius: var(--radius-lg);
-  text-align: center;
-}
-.empty-icon {
-  width: 64px; height: 64px; border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; color: var(--txt4);
-}
-.empty-title { font-size: 17px; font-weight: 600; color: var(--txt2); }
-.empty-sub { font-size: 13px; color: var(--txt4); max-width: 340px; line-height: 1.6; }
+  /* ── Header ── */
+  .dash-header {
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+    margin-bottom: 32px;
+  }
+  .dash-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; color: var(--txt);
+    letter-spacing: -0.02em; line-height: 1.1;
+  }
+  .dash-title span { color: var(--gold); font-style: italic; }
+  .dash-sub { font-size: 13px; color: var(--txt3); margin-top: 5px; }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--border3); }
+  .stat-card-n {
+    font-family: 'Instrument Serif', serif;
+    font-size: 34px; color: var(--txt);
+    line-height: 1; margin-bottom: 5px;
+  }
+  .stat-card-l {
+    font-size: 11px; color: var(--txt4);
+    letter-spacing: 0.06em; font-weight: 500;
+    text-transform: uppercase;
+  }
+  .stat-card.gold  .stat-card-n { color: var(--gold); }
+  .stat-card.red   .stat-card-n { color: var(--high); }
+  .stat-card.green .stat-card-n { color: var(--low);  }
+
+  /* ── Toolbar ── */
+  .dash-toolbar {
+    display: flex; align-items: center;
+    gap: 10px; flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .toolbar-search {
+    flex: 1; min-width: 200px; max-width: 340px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .toolbar-search:focus-within {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--gold-dim);
+  }
+  .toolbar-search i { color: var(--txt4); font-size: 14px; flex-shrink: 0; }
+  .toolbar-search input {
+    background: none; border: none; outline: none;
+    color: var(--txt); font-size: 13px;
+    font-family: 'Geist', sans-serif;
+    width: 100%;
+  }
+  .toolbar-search input::placeholder { color: var(--txt4); }
+
+  .filter-btn {
+    padding: 8px 14px; font-size: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--txt3); cursor: pointer;
+    font-family: 'Geist', sans-serif;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--surface2); color: var(--txt); }
+  .filter-btn.active {
+    background: var(--gold-dim);
+    border-color: rgba(201,168,76,0.3);
+    color: var(--gold);
+  }
+
+  .toolbar-end { margin-left: auto; display: flex; gap: 8px; }
+
+  /* ── Contract cards ── */
+  .contracts-grid {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .contract-card {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border2);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    text-decoration: none; color: inherit;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+  }
+  .contract-card:hover {
+    background: var(--surface2);
+    border-left-color: var(--gold);
+    transform: translateX(2px);
+    box-shadow: var(--shadow-md);
+  }
+  .contract-card.risk-low      { border-left-color: var(--low); }
+  .contract-card.risk-medium   { border-left-color: var(--med); }
+  .contract-card.risk-high     { border-left-color: var(--high); }
+  .contract-card.risk-critical { border-left-color: var(--critical); }
+
+  .contract-icon {
+    width: 42px; height: 42px; flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--txt3);
+  }
+  .contract-card.risk-low      .contract-icon { background: var(--low-bg);      color: var(--low);      border-color: rgba(61,214,140,0.2); }
+  .contract-card.risk-medium   .contract-icon { background: var(--med-bg);      color: var(--med);      border-color: rgba(245,166,35,0.2); }
+  .contract-card.risk-high     .contract-icon { background: var(--high-bg);     color: var(--high);     border-color: rgba(255,107,107,0.2); }
+  .contract-card.risk-critical .contract-icon { background: var(--critical-bg); color: var(--critical); border-color: rgba(255,45,85,0.2); }
+
+  .contract-info { flex: 1; min-width: 0; }
+  .contract-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--txt); margin-bottom: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .contract-meta {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11.5px; color: var(--txt4);
+    font-family: 'DM Mono', monospace;
+    flex-wrap: wrap;
+  }
+  .contract-meta i { font-size: 11px; }
+  .meta-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--txt4); }
+
+  .contract-right {
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .status-chip {
+    font-size: 10px; font-weight: 600;
+    padding: 3px 9px; border-radius: 99px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .status-pending    { background: rgba(87,95,120,0.2);   color: var(--txt3);     border: 1px solid rgba(87,95,120,0.3); }
+  .status-processing { background: rgba(201,168,76,0.12); color: var(--gold);     border: 1px solid rgba(201,168,76,0.25); }
+  .status-done       { background: var(--low-bg);          color: var(--low);      border: 1px solid rgba(61,214,140,0.2); }
+  .status-error      { background: var(--high-bg);         color: var(--high);     border: 1px solid rgba(255,107,107,0.2); }
+
+  .card-arrow { font-size: 16px; color: var(--txt4); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 80px 24px;
+    background: var(--surface);
+    border: 1px dashed var(--border3);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+  .empty-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: var(--txt4);
+  }
+  .empty-title { font-size: 17px; font-weight: 600; color: var(--txt2); }
+  .empty-sub {
+    font-size: 13px; color: var(--txt4);
+    max-width: 340px; line-height: 1.6;
+  }
+
+  /* ── No results (after search filter) ── */
+  .no-results {
+    display: none;
+    text-align: center; padding: 40px;
+    color: var(--txt4); font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    .contract-meta .meta-sep,
+    .contract-meta span:nth-child(n+3) { display: none; }
+    .contract-right { gap: 6px; }
+    .dash-header { flex-direction: column; align-items: flex-start; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dash-shell">
-  <div class="dash-hero">
+
+  <!-- ── Header ── -->
+  <div class="dash-header">
     <div>
       <h1 class="dash-title">Your <span>contracts</span></h1>
-      <div class="dash-sub">Upload a contract to begin AI-powered risk analysis.</div>
+      <div class="dash-sub">
+        {% if total > 0 %}
+          {{ total }} contract{{ total|pluralize }} · {{ done }} reviewed · {{ high_risk }} high risk
+        {% else %}
+          Upload your first contract to begin AI-powered analysis.
+        {% endif %}
+      </div>
     </div>
-    <a href="#" class="btn btn-gold">
+    <a href="#" class="btn btn-gold" id="upload-btn">
       <i class="ti ti-upload"></i> Upload Contract
     </a>
   </div>
 
-  <!-- Empty state (Day 3 will replace with real contract cards) -->
-  <div class="empty-state">
-    <div class="empty-icon"><i class="ti ti-file-plus"></i></div>
-    <div class="empty-title">No contracts yet</div>
-    <div class="empty-sub">Upload your first PDF or DOCX contract and LexAI will analyze it for risky clauses in seconds.</div>
-    <a href="#" class="btn btn-gold" style="margin-top:4px;">
-      <i class="ti ti-upload"></i> Upload your first contract
-    </a>
+  <!-- ── Stats row ── -->
+  {% if total > 0 %}
+  <div class="stats-row">
+    <div class="stat-card gold">
+      <div class="stat-card-n">{{ total }}</div>
+      <div class="stat-card-l">Total</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-card-n">{{ done }}</div>
+      <div class="stat-card-l">Reviewed</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-card-n">{{ high_risk }}</div>
+      <div class="stat-card-l">High Risk</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-n">
+        {{ contracts|length }}
+      </div>
+      <div class="stat-card-l">This Month</div>
+    </div>
   </div>
+  {% endif %}
+
+  <!-- ── Toolbar ── -->
+  {% if total > 0 %}
+  <div class="dash-toolbar">
+    <div class="toolbar-search">
+      <i class="ti ti-search"></i>
+      <input type="text" id="search-input" placeholder="Search contracts…" autocomplete="off" />
+    </div>
+
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="done">Done</button>
+    <button class="filter-btn" data-filter="high">High Risk</button>
+
+    <div class="toolbar-end">
+      <button class="btn" id="sort-btn" title="Sort">
+        <i class="ti ti-arrows-sort"></i> Date
+      </button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Contract list ── -->
+  {% if contracts %}
+    <div class="contracts-grid" id="contracts-grid">
+      {% for c in contracts %}
+      <a href="#"
+        class="contract-card {% if c.risk_score %}risk-{{ c.risk_score }}{% endif %}"
+        data-status="{{ c.status }}"
+        data-risk="{{ c.risk_score|default:'' }}"
+        data-title="{{ c.title|lower }}">
+
+        <div class="contract-icon">
+          <i class="ti ti-file-text"></i>
+        </div>
+
+        <div class="contract-info">
+          <div class="contract-title">{{ c.title }}</div>
+          <div class="contract-meta">
+            <span><i class="ti ti-clock"></i> {{ c.created_at|timesince }} ago</span>
+            {% if c.page_count %}
+            <span class="meta-sep"></span>
+            <span><i class="ti ti-file"></i> {{ c.page_count }} pages</span>
+            {% endif %}
+            {% if c.risk_score %}
+            <span class="meta-sep"></span>
+            <span class="risk-badge risk-{{ c.risk_score }}">{{ c.get_risk_score_display }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="contract-right">
+          <span class="status-chip status-{{ c.status }}">{{ c.get_status_display }}</span>
+          <i class="ti ti-chevron-right card-arrow"></i>
+        </div>
+      </a>
+      {% endfor %}
+
+      <div class="no-results" id="no-results">
+        <i class="ti ti-search" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+        No contracts match your search.
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Empty state -->
+    <div class="empty-state">
+      <div class="empty-icon"><i class="ti ti-file-plus"></i></div>
+      <div class="empty-title">No contracts yet</div>
+      <div class="empty-sub">
+        Upload your first PDF or DOCX contract and LexAI will analyze it
+        for risky clauses, score your exposure, and answer your questions.
+      </div>
+      <a href="#" class="btn btn-gold" style="margin-top:4px;">
+        <i class="ti ti-upload"></i> Upload your first contract
+      </a>
+    </div>
+  {% endif %}
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // ── Search ────────────────────────────────────────────────
+  const searchInput  = document.getElementById('search-input');
+  const grid         = document.getElementById('contracts-grid');
+  const noResults    = document.getElementById('no-results');
+  const cards        = document.querySelectorAll('.contract-card');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', filterCards);
+  }
+
+  // ── Filter buttons ────────────────────────────────────────
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterCards();
+    });
+  });
+
+  function filterCards() {
+    const q      = searchInput ? searchInput.value.toLowerCase() : '';
+    const filter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    let visible  = 0;
+
+    cards.forEach(card => {
+      const title  = card.dataset.title  || '';
+      const status = card.dataset.status || '';
+      const risk   = card.dataset.risk   || '';
+
+      const matchSearch = !q || title.includes(q);
+      const matchFilter =
+        filter === 'all'    ? true :
+        filter === 'high'   ? (risk === 'high' || risk === 'critical') :
+        status === filter;
+
+      const show = matchSearch && matchFilter;
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (noResults) {
+      noResults.style.display = visible === 0 ? 'block' : 'none';
+    }
+  }
+
+  // ── Sort ──────────────────────────────────────────────────
+  let sortAsc = false;
+  const sortBtn = document.getElementById('sort-btn');
+  if (sortBtn && grid) {
+    sortBtn.addEventListener('click', () => {
+      sortAsc = !sortAsc;
+      sortBtn.innerHTML = `<i class="ti ti-arrows-sort"></i> ${sortAsc ? 'Oldest' : 'Date'}`;
+      const cardArr = [...grid.querySelectorAll('.contract-card')];
+      cardArr.sort((a, b) => {
+        const ta = a.querySelector('.contract-meta span')?.textContent || '';
+        const tb = b.querySelector('.contract-meta span')?.textContent || '';
+        return sortAsc ? ta.localeCompare(tb) : tb.localeCompare(ta);
+      });
+      cardArr.forEach(c => grid.appendChild(c));
+    });
+  }
+
+  // ── Load contracts via API (keeps UI in sync) ─────────────
+  async function loadContracts() {
+    try {
+      const res  = await fetch('/api/contracts/');
+      const data = await res.json();
+      if (data.success) {
+        console.log(`Loaded ${data.count} contracts from API`);
+      }
+    } catch (e) {
+      // Silent fail — template already rendered server-side
+    }
+  }
+  loadContracts();
+</script>
 {% endblock %}
