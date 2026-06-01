@@ -110,22 +110,36 @@ class ContractUploadAPIView(APIView):
             status    = 'processing',
         )
 
-        # ── Parse immediately (Day 8 will move this to Celery) ──
+        # ── Parse + Embed (Day 8 moves this to Celery) ──────
         try:
             from .utils.pdf_parser import parse_contract_file
+            from .utils.embedder   import embed_contract
+
+            # Step 1 — Parse
             result = parse_contract_file(file_path)
 
             contract.raw_text   = result['text']
             contract.page_count = result['page_count']
-            contract.status     = 'done' if not result['error'] else 'error'
-            contract.save()
 
-            logger.info(
-                f'Contract {contract.id} parsed via {result["method"]} '
-                f'— {contract.page_count} pages, {len(contract.raw_text)} chars'
-            )
+            if result['error']:
+                contract.status = 'error'
+                contract.save()
+            else:
+                contract.status = 'processing'
+                contract.save()
+
+                # Step 2 — Embed
+                embed_result = embed_contract(contract.id, result['text'])
+                logger.info(
+                    f'Contract {contract.id} embedded — '
+                    f'{embed_result["chunks"]} chunks, '
+                    f'method: {result["method"]}'
+                )
+                contract.status = 'done'
+                contract.save()
+
         except Exception as e:
-            logger.error(f'Parsing failed for contract {contract.id}: {e}')
+            logger.error(f'Parse/embed failed for contract {contract.id}: {e}')
             contract.status = 'error'
             contract.save()
 
@@ -150,6 +164,13 @@ class ContractDetailAPIView(APIView):
 
     def delete(self, request, pk):
         contract = get_object_or_404(Contract, pk=pk, user=request.user)
+
+        # Delete embeddings from ChromaDB
+        try:
+            from .utils.embedder import delete_contract_embeddings
+            delete_contract_embeddings(contract.id)
+        except Exception as e:
+            logger.warning(f'ChromaDB cleanup failed for contract {contract.id}: {e}')
 
         # Delete file from disk
         if contract.file_path and os.path.exists(contract.file_path):
@@ -214,3 +235,60 @@ class DashboardStatsAPIView(APIView):
             'avg_processing_time': '–',
             'pending_qa':          0,
         })
+        
+# ── API: Embed a contract manually ──────────────────────────
+class ContractEmbedAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+
+        if not contract.raw_text:
+            return Response({
+                'success': False,
+                'error':   'No text to embed. Parse the contract first.',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        from .utils.embedder import embed_contract
+        result = embed_contract(contract.id, contract.raw_text)
+
+        return Response({
+            'success': result['success'],
+            'chunks':  result['chunks'],
+            'error':   result['error'],
+        })
+
+
+# ── API: Semantic search within a contract ───────────────────
+class ContractSearchAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+        query    = request.data.get('query', '').strip()
+
+        if not query:
+            return Response({
+                'success': False,
+                'error':   'Query is required.',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        from .utils.embedder import query_contract
+        chunks = query_contract(contract.id, query, top_k=5)
+
+        return Response({
+            'success': True,
+            'query':   query,
+            'results': chunks,
+            'count':   len(chunks),
+        })
+
+
+# ── API: ChromaDB stats ──────────────────────────────────────
+class EmbedStatsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .utils.embedder import get_collection_stats
+        stats = get_collection_stats()
+        return Response({'success': True, **stats})

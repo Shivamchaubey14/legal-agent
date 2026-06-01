@@ -21,7 +21,16 @@ urlpatterns = [
          views.ContractStatusAPIView.as_view(), name='api_contract_status'),
 
     path('api/contracts/<int:pk>/text/',
-         views.ContractTextAPIView.as_view(), name='api_contract_text'),
+         views.ContractTextAPIView.as_view(),   name='api_contract_text'),
+
+    path('api/contracts/<int:pk>/embed/',
+         views.ContractEmbedAPIView.as_view(),  name='api_contract_embed'),
+
+    path('api/contracts/<int:pk>/search/',
+         views.ContractSearchAPIView.as_view(), name='api_contract_search'),
+
+    path('api/embed/stats/',
+         views.EmbedStatsAPIView.as_view(),     name='api_embed_stats'),
     
     path('api/dashboard/stats/',
          views.DashboardStatsAPIView.as_view(), name='api_dashboard_stats'),
