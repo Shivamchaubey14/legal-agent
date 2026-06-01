@@ -1,173 +1,222 @@
 {% extends 'base.html' %}
 {% block title %}Sign In — LexAI{% endblock %}
 
-{% block extra_js %}
-<script>
-  const form    = document.getElementById('login-form');
-  const btn     = document.getElementById('login-btn');
-  const errBox  = document.getElementById('form-error');
-
-  function showError(msg) {
-    errBox.textContent = msg;
-    errBox.style.display = 'block';
-  }
-  function clearError() {
-    errBox.style.display = 'none';
-    errBox.textContent = '';
-  }
-  function setLoading(on) {
-    btn.disabled = on;
-    btn.innerHTML = on
-      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Signing in…'
-      : '<i class="ti ti-login" style="margin-right:6px;"></i> Sign In';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearError();
-    setLoading(true);
-
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    try {
-      const res  = await fetch('/auth/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrf,
-        },
-        body: JSON.stringify({
-          username: document.getElementById('username').value.trim(),
-          password: document.getElementById('password').value,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        window.location.href = data.redirect;
-      } else {
-        showError(data.error || 'Something went wrong.');
-        setLoading(false);
-      }
-    } catch (err) {
-      showError('Network error — please try again.');
-      setLoading(false);
-    }
-  });
-</script>
-
-<style>
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-{% endblock %}
-
 {% block extra_css %}
 <style>
+  /* Override any page wrapper constraints */
+  .page {
+    padding: 0 !important;
+    background: var(--bg);
+    overflow: hidden !important;
+    height: 100vh !important;
+  }
+
+  body {
+    overflow: hidden;
+    height: 100vh;
+  }
+
   .auth-page {
-    flex: 1;
     width: 100%;
+    height: calc(100vh - 58px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px 24px;
+    padding: 20px 24px;
     position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
+  
+  /* Custom scrollbar for auth page (only if content overflows) */
+  .auth-page::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .auth-page::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .auth-page::-webkit-scrollbar-thumb {
+    background: var(--surface3);
+    border-radius: 4px;
+  }
+  
+  @media (max-width: 768px) {
+    .auth-page {
+      padding: 16px 20px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .auth-page {
+      padding: 12px 16px;
+    }
+  }
+  
   .auth-page::before {
     content: "";
     position: absolute;
     width: 500px;
     height: 500px;
     border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(201, 168, 76, 0.06) 0%,
-      transparent 70%
-    );
+    background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     pointer-events: none;
   }
+  
   .auth-card {
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     margin: 0 auto;
     background: var(--surface);
     border: 1px solid var(--border2);
     border-radius: var(--radius-xl);
-    padding: 40px 36px;
+    padding: 36px 40px;
     box-shadow: var(--shadow-lg);
-    margin-top: 20px;
   }
-  .auth-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 30px;
+  
+  @media (max-width: 480px) {
+    .auth-card {
+      padding: 28px 24px;
+    }
   }
+  
+  @media (max-height: 700px) {
+    .auth-card {
+      padding: 24px 32px;
+    }
+  }
+  
+  .auth-logo { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    margin-bottom: 28px; 
+  }
+  
   .auth-logo-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     background: linear-gradient(135deg, var(--gold), #8b6914);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 20px;
     color: #0a0b0f;
     box-shadow: 0 0 18px var(--gold-glow);
   }
-  .auth-brand {
-    font-family: "Instrument Serif", serif;
-    font-size: 20px;
-    color: var(--txt);
+  
+  .auth-brand { 
+    font-family: "Instrument Serif", serif; 
+    font-size: 22px; 
+    color: var(--txt); 
   }
-  .auth-brand span {
+  
+  .auth-brand span { 
+    color: var(--gold); 
+  }
+  
+  .auth-title { 
+    font-size: 24px; 
+    font-weight: 600; 
+    color: var(--txt); 
+    margin-bottom: 6px; 
+    letter-spacing: -0.02em; 
+  }
+  
+  .auth-sub { 
+    font-size: 13px; 
+    color: var(--txt3); 
+    margin-bottom: 24px; 
+  }
+  
+  .auth-form { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 18px; 
+  }
+  
+  @media (max-height: 700px) {
+    .auth-form {
+      gap: 14px;
+    }
+  }
+  
+  /* Password field with eye icon */
+  .password-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  .password-wrapper .form-input {
+    padding-right: 45px;
+    width: 100%;
+  }
+  
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--txt4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding: 4px;
+    transition: color 0.15s;
+    border-radius: var(--radius-sm);
+  }
+  
+  .password-toggle:hover {
     color: var(--gold);
   }
-  .auth-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--txt);
-    margin-bottom: 6px;
-    letter-spacing: -0.02em;
-  }
-  .auth-sub {
-    font-size: 13px;
-    color: var(--txt3);
-    margin-bottom: 28px;
-  }
-  .auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
+  
   .auth-submit {
     width: 100%;
     padding: 11px;
     font-size: 14px;
     font-weight: 700;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: pointer;
     border: none;
     background: var(--gold);
     color: #0a0b0f;
     font-family: "Geist", sans-serif;
     box-shadow: 0 0 18px var(--gold-glow);
-    transition: all 0.15s;
+    transition: all 0.2s;
+    margin-top: 4px;
   }
-  .auth-submit:hover {
-    background: var(--gold-light);
-    transform: translateY(-1px);
+  
+  .auth-submit:hover:not(:disabled) { 
+    background: var(--gold-light); 
+    transform: translateY(-1px); 
+    box-shadow: 0 0 28px rgba(232,201,106,0.35);
   }
+  
+  .auth-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
   .auth-divider {
     text-align: center;
     font-size: 12px;
     color: var(--txt4);
     position: relative;
-    margin: 4px 0;
+    margin: 20px 0 8px;
   }
+  
   .auth-divider::before,
   .auth-divider::after {
     content: '';
@@ -177,81 +226,60 @@
     height: 1px;
     background: var(--border2);
   }
+  
   .auth-divider::before { left: 0; }
-  .auth-divider::after { right: 0; }
-  .auth-switch {
-    text-align: center;
-    font-size: 12.5px;
-    color: var(--txt4);
-    margin-top: 18px;
+  .auth-divider::after  { right: 0; }
+  
+  .auth-switch { 
+    text-align: center; 
+    font-size: 12.5px; 
+    color: var(--txt4); 
+    margin-top: 18px; 
   }
-  .auth-switch a {
-    color: var(--gold);
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .auth-switch a:hover {
-    text-decoration: underline;
-  }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  const form    = document.getElementById('login-form');
-  const btn     = document.getElementById('login-btn');
-  const errBox  = document.getElementById('form-error');
-
-  function showError(msg) {
-    errBox.textContent = msg;
-    errBox.style.display = 'block';
-  }
-  function clearError() {
-    errBox.style.display = 'none';
-    errBox.textContent = '';
-  }
-  function setLoading(on) {
-    btn.disabled = on;
-    btn.innerHTML = on
-      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Signing in…'
-      : '<i class="ti ti-login" style="margin-right:6px;"></i> Sign In';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearError();
-    setLoading(true);
-
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    try {
-      const res  = await fetch('/auth/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrf,
-        },
-        body: JSON.stringify({
-          username: document.getElementById('username').value.trim(),
-          password: document.getElementById('password').value,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        window.location.href = data.redirect;
-      } else {
-        showError(data.error || 'Something went wrong.');
-        setLoading(false);
-      }
-    } catch (err) {
-      showError('Network error — please try again.');
-      setLoading(false);
+  
+  @media (max-height: 700px) {
+    .auth-switch {
+      margin-top: 12px;
     }
-  });
-</script>
-
-<style>
-  @keyframes spin { to { transform: rotate(360deg); } }
+  }
+  
+  .auth-switch a { 
+    color: var(--gold); 
+    text-decoration: none; 
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  
+  .auth-switch a:hover { 
+    text-decoration: underline;
+    opacity: 0.8;
+  }
+  
+  /* Error message styling */
+  .form-error {
+    display: none;
+    background: var(--high-bg);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--high);
+    margin-bottom: 16px;
+    animation: slideIn 0.3s ease;
+  }
+  
+  .form-error.visible {
+    display: block;
+  }
+  
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes spin { 
+    to { transform: rotate(360deg); } 
+  }
 </style>
 {% endblock %}
 
@@ -265,50 +293,32 @@
     <div class="auth-title">Welcome back</div>
     <div class="auth-sub">Sign in to your account to continue.</div>
 
-    <div id="form-error" style="
-      display:none;
-      background: var(--high-bg);
-      border: 1px solid rgba(255,107,107,0.3);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 12.5px;
-      color: var(--high);
-      margin-bottom: 4px;
-    "></div>
+    <div class="form-error" id="form-error"></div>
 
     <form class="auth-form" id="login-form">
       {% csrf_token %}
       <div class="form-group">
         <label class="form-label">Username</label>
-        <input
-          class="form-input"
-          type="text"
-          id="username"
-          name="username"
-          placeholder="your_username"
-          autocomplete="username"
-          required
-        />
+        <input class="form-input" type="text" id="username" name="username"
+          placeholder="your_username" autocomplete="username" required />
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input
-          class="form-input"
-          type="password"
-          id="password"
-          name="password"
-          placeholder="••••••••"
-          autocomplete="current-password"
-          required
-        />
+        <div class="password-wrapper">
+          <input class="form-input" type="password" id="password" name="password"
+            placeholder="••••••••" autocomplete="current-password" required />
+          <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">
+            <i class="ti ti-eye"></i>
+          </button>
+        </div>
       </div>
       <button type="submit" class="auth-submit" id="login-btn">
-        <i class="ti ti-login" style="margin-right: 6px"></i> Sign In
+        <i class="ti ti-login" style="margin-right:8px;"></i> Sign In
       </button>
     </form>
 
-    <div class="auth-divider" style="margin-top: 20px;">or</div>
-    <div class="auth-switch" style="margin-top: 14px;">
+    <div class="auth-divider">or</div>
+    <div class="auth-switch">
       Don't have an account? <a href="/auth/register/">Create one free</a>
     </div>
   </div>
@@ -317,59 +327,84 @@
 
 {% block extra_js %}
 <script>
-  const form    = document.getElementById('login-form');
-  const btn     = document.getElementById('login-btn');
-  const errBox  = document.getElementById('form-error');
+  const form   = document.getElementById('login-form');
+  const btn    = document.getElementById('login-btn');
+  const errBox = document.getElementById('form-error');
+  const passwordInput = document.getElementById('password');
+  const togglePassword = document.getElementById('togglePassword');
 
-  function showError(msg) {
-    errBox.textContent = msg;
-    errBox.style.display = 'block';
+  function showError(msg) { 
+    errBox.textContent = msg; 
+    errBox.classList.add('visible'); 
   }
-  function clearError() {
-    errBox.style.display = 'none';
-    errBox.textContent = '';
+  
+  function clearError() { 
+    errBox.classList.remove('visible'); 
+    errBox.textContent = ''; 
   }
+  
   function setLoading(on) {
     btn.disabled = on;
     btn.innerHTML = on
-      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Signing in…'
-      : '<i class="ti ti-login" style="margin-right:6px;"></i> Sign In';
+      ? '<i class="ti ti-loader-2" style="margin-right:8px;animation:spin 0.8s linear infinite;"></i> Signing in…'
+      : '<i class="ti ti-login" style="margin-right:8px;"></i> Sign In';
   }
+
+  // Toggle password visibility
+  togglePassword.addEventListener('click', function() {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    // Toggle eye icon
+    const icon = this.querySelector('i');
+    if (type === 'text') {
+      icon.classList.remove('ti-eye');
+      icon.classList.add('ti-eye-off');
+    } else {
+      icon.classList.remove('ti-eye-off');
+      icon.classList.add('ti-eye');
+    }
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearError();
     setLoading(true);
-
+    
     const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!username || !password) {
+      showError('Please enter both username and password.');
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const res  = await fetch('/auth/login/', {
+      const res = await fetch('/auth/api/login/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrf,
+        headers: { 
+          'Content-Type': 'application/json', 
+          'X-CSRFToken': csrf 
         },
         body: JSON.stringify({
-          username: document.getElementById('username').value.trim(),
-          password: document.getElementById('password').value,
+          username: username,
+          password: password,
         }),
       });
+      
       const data = await res.json();
+      
       if (data.success) {
-        window.location.href = data.redirect;
+        window.location.href = data.redirect || '/dashboard/';
       } else {
-        showError(data.error || 'Something went wrong.');
+        showError(data.error || 'Invalid username or password.');
         setLoading(false);
       }
     } catch (err) {
-      showError('Network error — please try again.');
+      showError('Network error — please check your connection and try again.');
       setLoading(false);
     }
   });
 </script>
-
-<style>
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
 {% endblock %}

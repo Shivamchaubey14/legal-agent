@@ -1,0 +1,763 @@
+{% extends 'base.html' %}
+{% block title %}Upload Contract — LexAI{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_css %}
+  .page {
+    padding: 0 !important;
+    background: var(--bg);
+  }
+
+  body {
+    background: var(--bg);
+  }
+
+  /* ═══════════════════════════════════════════════
+     UPLOAD CONTAINER — FULL WIDTH, SAME AS DASHBOARD
+  ═══════════════════════════════════════════════ */
+  .upload-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 40px 48px 80px;
+    position: relative;
+    width: 100%;
+  }
+
+  @media (max-width: 1280px) { .upload-container { padding: 32px 40px 64px; } }
+  @media (max-width: 1024px) { .upload-container { padding: 28px 32px 56px; } }
+  @media (max-width: 768px)  { .upload-container { padding: 24px 24px 48px; } }
+  @media (max-width: 640px)  { .upload-container { padding: 20px 20px 40px; } }
+
+  /* ── Page header — exact mirror of .dash-header ── */
+  .upload-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .upload-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px;
+    color: var(--txt);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .upload-title span {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .upload-sub {
+    font-size: 13px;
+    color: var(--txt3);
+    margin-top: 6px;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .upload-sub-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--txt4);
+  }
+
+  .upload-header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  /* ── Two-column layout matching dash-body ── */
+  .upload-body {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 32px;
+    align-items: start;
+  }
+
+  @media (max-width: 1200px) {
+    .upload-body {
+      grid-template-columns: 1fr 300px;
+      gap: 28px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .upload-body {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+  }
+
+  /* ── Drop zone ── */
+  .drop-zone {
+    border: 2px dashed var(--border3);
+    border-radius: var(--radius-xl);
+    padding: 72px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: var(--surface);
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .drop-zone:hover,
+  .drop-zone.drag-over {
+    border-color: var(--gold);
+    background: var(--gold-dim);
+    box-shadow: 0 0 32px var(--gold-glow);
+    transform: translateY(-2px);
+  }
+
+  .drop-zone.drag-over .drop-icon {
+    transform: scale(1.1) translateY(-4px);
+  }
+
+  .drop-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    color: var(--txt3);
+    margin: 0 auto 28px;
+    transition: transform 0.25s ease, color 0.2s, background 0.2s, border-color 0.2s;
+  }
+
+  .drop-zone:hover .drop-icon,
+  .drop-zone.drag-over .drop-icon {
+    color: var(--gold);
+    border-color: rgba(201, 168, 76, 0.3);
+    background: var(--gold-dim);
+  }
+
+  .drop-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    color: var(--txt);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .drop-sub {
+    font-size: 13px;
+    color: var(--txt3);
+    margin-bottom: 28px;
+    line-height: 1.6;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .drop-browse {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0a0b0f;
+    cursor: pointer;
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 10px 24px;
+    border-radius: 99px;
+    transition: all 0.2s;
+    box-shadow: 0 0 18px var(--gold-glow);
+  }
+
+  .drop-browse:hover {
+    background: var(--gold-light);
+    transform: translateY(-1px);
+    box-shadow: 0 0 28px rgba(232,201,106,0.35);
+  }
+
+  .drop-limits {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--txt4);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .drop-limits span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .drop-limits i { font-size: 12px; color: var(--txt4); }
+
+  #file-input { display: none; }
+
+  /* ── File preview card ── */
+  .file-preview {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-left: 4px solid var(--gold);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    align-items: center;
+    gap: 16px;
+    animation: slideIn 0.3s ease;
+  }
+
+  .file-preview.visible { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .file-preview-icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .file-preview-icon.pdf  {
+    background: rgba(255, 107, 107, 0.12);
+    color: var(--high);
+    border: 1px solid rgba(255, 107, 107, 0.2);
+  }
+
+  .file-preview-icon.docx {
+    background: rgba(61, 214, 140, 0.12);
+    color: var(--low);
+    border: 1px solid rgba(61, 214, 140, 0.2);
+  }
+
+  .file-preview-info { flex: 1; min-width: 0; }
+
+  .file-preview-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--txt);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+
+  .file-preview-meta {
+    font-size: 11.5px;
+    color: var(--txt4);
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    gap: 12px;
+  }
+
+  .file-preview-remove {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--txt3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .file-preview-remove:hover {
+    background: var(--high-bg);
+    color: var(--high);
+    border-color: rgba(255, 107, 107, 0.3);
+  }
+
+  /* ── Form ── */
+  .upload-form { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Progress bar ── */
+  .progress-wrap { display: none; flex-direction: column; gap: 10px; }
+  .progress-wrap.visible { display: flex; }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--txt3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .progress-track {
+    height: 6px;
+    background: var(--surface3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--gold);
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+
+  /* ── Error box ── */
+  .upload-error {
+    display: none;
+    background: var(--high-bg);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--high);
+    margin-bottom: 20px;
+  }
+
+  .upload-error.visible { display: block; }
+
+  /* ── Submit button ── */
+  .upload-submit {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: none;
+    background: var(--gold);
+    color: #0a0b0f;
+    font-family: 'Geist', sans-serif;
+    box-shadow: 0 0 18px var(--gold-glow);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .upload-submit:hover:not(:disabled) {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 0 28px rgba(232, 201, 106, 0.35);
+  }
+
+  .upload-submit:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── Right sidebar panels — exact match to dashboard sidebar ── */
+  .upload-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+  }
+
+  /* Panel base */
+  .upload-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--txt);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title i { color: var(--gold); font-size: 16px; }
+
+  /* Tips rows */
+  .tip-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--txt3);
+    line-height: 1.6;
+  }
+
+  .tip-row:last-child { border-bottom: none; }
+
+  .tip-row i {
+    color: var(--low);
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* Supported formats list */
+  .format-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .format-row:last-child { border-bottom: none; }
+
+  .format-label {
+    color: var(--txt3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .format-label i { font-size: 14px; color: var(--txt4); }
+
+  .format-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+
+  .format-badge.supported {
+    background: var(--low-bg);
+    color: var(--low);
+    border: 1px solid rgba(61, 214, 140, 0.2);
+  }
+
+  .format-badge.ocr {
+    background: var(--gold-dim);
+    color: var(--gold);
+    border: 1px solid rgba(201, 168, 76, 0.25);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .upload-header { flex-direction: column; align-items: flex-start; }
+    .upload-header-actions { width: 100%; }
+  }
+
+  @media (max-width: 640px) {
+    .upload-title { font-size: 28px; }
+    .drop-zone { padding: 48px 20px; }
+    .drop-icon { width: 60px; height: 60px; font-size: 26px; }
+    .file-preview { flex-wrap: wrap; }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+
+  <!-- ── Header — mirrors .dash-header exactly ── -->
+  <div class="upload-header">
+    <div>
+      <h1 class="upload-title">Upload a <span>contract</span></h1>
+      <div class="upload-sub">
+        <span>PDF or DOCX</span>
+        <span class="upload-sub-dot"></span>
+        <span>Max 20 MB</span>
+        <span class="upload-sub-dot"></span>
+        <span>OCR supported</span>
+        <span class="upload-sub-dot"></span>
+        <span>Private &amp; secure</span>
+      </div>
+    </div>
+    <div class="upload-header-actions">
+      <a href="/dashboard/" class="btn btn-gold">
+        <i class="ti ti-layout-dashboard"></i> Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Error box ── -->
+  <div class="upload-error" id="upload-error"></div>
+
+  <!-- ── Two-column body ── -->
+  <div class="upload-body">
+
+    <!-- Left: drop zone + form -->
+    <div>
+
+      <div class="drop-zone" id="drop-zone">
+        <div class="drop-icon"><i class="ti ti-cloud-upload"></i></div>
+        <div class="drop-title">Drag &amp; drop your contract here</div>
+        <div class="drop-sub">PDF · DOCX · Max 20 MB · OCR fallback</div>
+        <label class="drop-browse" for="file-input">
+          <i class="ti ti-folder-open"></i> Browse files
+        </label>
+        <div class="drop-limits">
+          <span><i class="ti ti-file-type-pdf"></i> PDF</span>
+          <span><i class="ti ti-file-type-doc"></i> DOCX</span>
+          <span><i class="ti ti-scan"></i> OCR</span>
+          <span><i class="ti ti-shield-check"></i> 20 MB max</span>
+        </div>
+        <input type="file" id="file-input" accept=".pdf,.docx" />
+      </div>
+
+      <!-- File preview -->
+      <div class="file-preview" id="file-preview">
+        <div class="file-preview-icon" id="file-icon"><i class="ti ti-file"></i></div>
+        <div class="file-preview-info">
+          <div class="file-preview-name" id="file-name">filename.pdf</div>
+          <div class="file-preview-meta">
+            <span id="file-size">0 KB</span>
+            <span id="file-type-label">PDF</span>
+          </div>
+        </div>
+        <button class="file-preview-remove" id="remove-file" title="Remove file">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <div class="upload-form">
+        <div class="form-group">
+          <label class="form-label">
+            Contract Title
+            <span style="color:var(--txt4);font-weight:400;text-transform:none;letter-spacing:0;">&nbsp;— optional, auto-detected from filename</span>
+          </label>
+          <input
+            class="form-input"
+            type="text"
+            id="contract-title"
+            placeholder="e.g. Vendor Agreement — Acme Corp"
+            maxlength="255"
+          />
+        </div>
+
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-header">
+            <span id="progress-label">Uploading…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <button class="upload-submit" id="upload-btn" disabled>
+          <i class="ti ti-upload"></i> Upload &amp; Analyze
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Right sidebar -->
+    <aside class="upload-sidebar">
+
+      <!-- Supported formats -->
+      <div class="upload-panel">
+        <div class="panel-header">
+          <div class="panel-title"><i class="ti ti-files"></i> Supported Formats</div>
+        </div>
+        <div class="format-row">
+          <span class="format-label"><i class="ti ti-file-type-pdf"></i> PDF (text-based)</span>
+          <span class="format-badge supported">Supported</span>
+        </div>
+        <div class="format-row">
+          <span class="format-label"><i class="ti ti-file-type-doc"></i> DOCX / Word</span>
+          <span class="format-badge supported">Supported</span>
+        </div>
+        <div class="format-row">
+          <span class="format-label"><i class="ti ti-scan"></i> Scanned PDF</span>
+          <span class="format-badge ocr">OCR Fallback</span>
+        </div>
+        <div class="format-row">
+          <span class="format-label"><i class="ti ti-shield-check"></i> Max file size</span>
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--txt3);">20 MB</span>
+        </div>
+      </div>
+
+      <!-- Tips panel -->
+      <div class="upload-panel">
+        <div class="panel-header">
+          <div class="panel-title"><i class="ti ti-bulb"></i> Tips for best results</div>
+        </div>
+        <div class="tip-row">
+          <i class="ti ti-check"></i>
+          <span>Text-based PDFs give the most accurate clause detection. Scanned PDFs are supported via OCR but may be slower.</span>
+        </div>
+        <div class="tip-row">
+          <i class="ti ti-check"></i>
+          <span>Contracts up to 50 pages process in under 30 seconds. Larger files may take a little longer.</span>
+        </div>
+        <div class="tip-row">
+          <i class="ti ti-check"></i>
+          <span>Your files are stored privately — only you can access them. They are never shared or used for training.</span>
+        </div>
+        <div class="tip-row">
+          <i class="ti ti-check"></i>
+          <span>Supported types: NDA, employment, SaaS, vendor, lease, freelance, and more.</span>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const dropZone     = document.getElementById('drop-zone');
+  const fileInput    = document.getElementById('file-input');
+  const filePreview  = document.getElementById('file-preview');
+  const fileIcon     = document.getElementById('file-icon');
+  const fileNameEl   = document.getElementById('file-name');
+  const fileSizeEl   = document.getElementById('file-size');
+  const fileTypeEl   = document.getElementById('file-type-label');
+  const removeBtn    = document.getElementById('remove-file');
+  const uploadBtn    = document.getElementById('upload-btn');
+  const errorBox     = document.getElementById('upload-error');
+  const progressWrap = document.getElementById('progress-wrap');
+  const progressFill = document.getElementById('progress-fill');
+  const progressPct  = document.getElementById('progress-pct');
+  const progressLbl  = document.getElementById('progress-label');
+  const titleInput   = document.getElementById('contract-title');
+
+  let selectedFile = null;
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.add('visible');
+    errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function clearError() { errorBox.classList.remove('visible'); }
+
+  function formatSize(bytes) {
+    if (bytes < 1024)        return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function setProgress(pct, label) {
+    progressFill.style.width = pct + '%';
+    progressPct.textContent  = pct + '%';
+    if (label) progressLbl.textContent = label;
+  }
+
+  function handleFile(file) {
+    clearError();
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'docx'].includes(ext)) { showError('Only PDF and DOCX files are supported.'); return; }
+    if (file.size > 20 * 1024 * 1024)  { showError('File is too large. Maximum size is 20 MB.'); return; }
+
+    selectedFile = file;
+    fileNameEl.textContent = file.name;
+    fileSizeEl.textContent = formatSize(file.size);
+    fileTypeEl.textContent = ext.toUpperCase();
+    fileIcon.className = `file-preview-icon ${ext}`;
+    fileIcon.innerHTML = ext === 'pdf'
+      ? '<i class="ti ti-file-type-pdf"></i>'
+      : '<i class="ti ti-file-type-doc"></i>';
+    filePreview.classList.add('visible');
+    dropZone.style.display = 'none';
+    uploadBtn.disabled = false;
+
+    if (!titleInput.value) {
+      titleInput.value = file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+  }
+
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+  removeBtn.addEventListener('click', () => {
+    selectedFile = null; fileInput.value = ''; titleInput.value = '';
+    filePreview.classList.remove('visible');
+    dropZone.style.display = '';
+    uploadBtn.disabled = true;
+    clearError();
+  });
+
+  uploadBtn.addEventListener('click', () => {
+    if (!selectedFile) return;
+    clearError();
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 0.8s linear infinite;"></i> Uploading…';
+    progressWrap.classList.add('visible');
+    setProgress(0, 'Uploading…');
+
+    const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('title', titleInput.value.trim());
+
+    const xhr = new XMLHttpRequest();
+    xhr.upload.addEventListener('progress', e => {
+      if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 90), 'Uploading…');
+    });
+    xhr.addEventListener('load', () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (data.success) {
+          setProgress(100, 'Upload complete!');
+          progressLbl.style.color = 'var(--low)';
+          uploadBtn.innerHTML = '<i class="ti ti-check"></i> Uploaded! Redirecting…';
+          setTimeout(() => { window.location.href = data.redirect || '/dashboard/'; }, 800);
+        } else { showError(data.error || 'Upload failed.'); resetBtn(); }
+      } catch { showError('Unexpected server response.'); resetBtn(); }
+    });
+    xhr.addEventListener('error', () => { showError('Network error — please check your connection.'); resetBtn(); });
+    xhr.open('POST', '/api/contracts/upload/');
+    xhr.setRequestHeader('X-CSRFToken', csrf);
+    xhr.send(formData);
+  });
+
+  function resetBtn() {
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = '<i class="ti ti-upload"></i> Upload &amp; Analyze';
+    progressWrap.classList.remove('visible');
+    setProgress(0, 'Uploading…');
+    progressLbl.style.color = '';
+  }
+</script>
+{% endblock %}

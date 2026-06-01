@@ -1,260 +1,338 @@
-{% extends 'base.html' %} {% block title %}Create Account — LexAI{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Create Account — LexAI{% endblock %}
 
-{% block extra_js %}
-<script>
-  const form   = document.getElementById('register-form');
-  const btn    = document.getElementById('register-btn');
-  const errBox = document.getElementById('form-error');
-
-  function showError(msg) {
-    errBox.textContent = msg;
-    errBox.style.display = 'block';
-  }
-  function clearError() {
-    errBox.style.display = 'none';
-    errBox.textContent = '';
-  }
-  function setLoading(on) {
-    btn.disabled = on;
-    btn.innerHTML = on
-      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Creating account…'
-      : '<i class="ti ti-rocket" style="margin-right:6px;"></i> Create Account';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearError();
-    setLoading(true);
-
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    try {
-      const res  = await fetch('/auth/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrf,
-        },
-        body: JSON.stringify({
-          username: document.getElementById('reg-username').value.trim(),
-          email:    document.getElementById('reg-email').value.trim(),
-          password: document.getElementById('reg-password').value,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        window.location.href = data.redirect;
-      } else {
-        showError(data.error || 'Something went wrong.');
-        setLoading(false);
-      }
-    } catch (err) {
-      showError('Network error — please try again.');
-      setLoading(false);
-    }
-  });
-</script>
-
-<style>
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-{% endblock %}
 {% block extra_css %}
 <style>
+  /* Override any page wrapper constraints */
+  .page {
+    padding: 0 !important;
+    background: var(--bg);
+    overflow: hidden !important;
+    height: 100vh !important;
+  }
+
+  body {
+    overflow: hidden;
+    height: 100vh;
+  }
+
   .auth-page {
-    flex: 1;
     width: 100%;
-    min-height: calc(100vh - 58px);
+    height: calc(100vh - 58px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px 24px;
+    padding: 20px 24px;
     position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
+  
+  /* Custom scrollbar for auth page (only if content overflows) */
+  .auth-page::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .auth-page::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .auth-page::-webkit-scrollbar-thumb {
+    background: var(--surface3);
+    border-radius: 4px;
+  }
+  
+  @media (max-width: 768px) {
+    .auth-page {
+      padding: 16px 20px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .auth-page {
+      padding: 12px 16px;
+    }
+  }
+  
   .auth-page::before {
     content: "";
     position: absolute;
     width: 500px;
     height: 500px;
     border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(201, 168, 76, 0.06) 0%,
-      transparent 70%
-    );
+    background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     pointer-events: none;
   }
+  
   .auth-card {
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 420px;
+    max-width: 460px;
     margin: 0 auto;
     background: var(--surface);
     border: 1px solid var(--border2);
     border-radius: var(--radius-xl);
-    padding: 40px 36px;
+    padding: 36px 40px;
     box-shadow: var(--shadow-lg);
-    margin-top: 20px;
   }
-  .auth-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 30px;
+  
+  @media (max-width: 480px) {
+    .auth-card {
+      padding: 28px 24px;
+    }
   }
+  
+  @media (max-height: 700px) {
+    .auth-card {
+      padding: 24px 32px;
+    }
+  }
+  
+  .auth-logo { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    margin-bottom: 28px; 
+  }
+  
   .auth-logo-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     background: linear-gradient(135deg, var(--gold), #8b6914);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 20px;
     color: #0a0b0f;
     box-shadow: 0 0 18px var(--gold-glow);
   }
-  .auth-brand {
-    font-family: "Instrument Serif", serif;
-    font-size: 20px;
-    color: var(--txt);
+  
+  .auth-brand { 
+    font-family: "Instrument Serif", serif; 
+    font-size: 22px; 
+    color: var(--txt); 
   }
-  .auth-brand span {
+  
+  .auth-brand span { 
+    color: var(--gold); 
+  }
+  
+  .auth-title { 
+    font-size: 24px; 
+    font-weight: 600; 
+    color: var(--txt); 
+    margin-bottom: 6px; 
+    letter-spacing: -0.02em; 
+  }
+  
+  .auth-sub { 
+    font-size: 13px; 
+    color: var(--txt3); 
+    margin-bottom: 20px; 
+  }
+  
+  /* Perks section */
+  .perks { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    margin-bottom: 24px;
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  @media (max-height: 700px) {
+    .perks {
+      margin-bottom: 18px;
+      padding: 10px 0;
+    }
+  }
+  
+  .perk { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: 12px; 
+    color: var(--txt3);
+  }
+  
+  .perk i { 
+    color: var(--gold); 
+    font-size: 14px; 
+    flex-shrink: 0; 
+  }
+  
+  .auth-form { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 16px; 
+  }
+  
+  @media (max-height: 700px) {
+    .auth-form {
+      gap: 12px;
+    }
+  }
+  
+  /* Password field with eye icon */
+  .password-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  .password-wrapper .form-input {
+    padding-right: 45px;
+    width: 100%;
+  }
+  
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--txt4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding: 4px;
+    transition: color 0.15s;
+    border-radius: var(--radius-sm);
+  }
+  
+  .password-toggle:hover {
     color: var(--gold);
   }
-  .auth-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--txt);
-    margin-bottom: 6px;
-    letter-spacing: -0.02em;
-  }
-  .auth-sub {
-    font-size: 13px;
-    color: var(--txt3);
-    margin-bottom: 28px;
-  }
-  .auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
+  
   .auth-submit {
     width: 100%;
     padding: 11px;
     font-size: 14px;
     font-weight: 700;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: pointer;
     border: none;
     background: var(--gold);
     color: #0a0b0f;
     font-family: "Geist", sans-serif;
     box-shadow: 0 0 18px var(--gold-glow);
-    transition: all 0.15s;
+    transition: all 0.2s;
+    margin-top: 4px;
   }
-  .auth-submit:hover {
-    background: var(--gold-light);
-    transform: translateY(-1px);
+  
+  .auth-submit:hover:not(:disabled) { 
+    background: var(--gold-light); 
+    transform: translateY(-1px); 
+    box-shadow: 0 0 28px rgba(232,201,106,0.35);
   }
-  .auth-switch {
-    text-align: center;
-    font-size: 12.5px;
-    color: var(--txt4);
-    margin-top: 18px;
+  
+  .auth-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
   }
-  .auth-switch a {
-    color: var(--gold);
-    text-decoration: none;
+  
+  .auth-switch { 
+    text-align: center; 
+    font-size: 12.5px; 
+    color: var(--txt4); 
+    margin-top: 20px; 
+  }
+  
+  @media (max-height: 700px) {
+    .auth-switch {
+      margin-top: 14px;
+    }
+  }
+  
+  .auth-switch a { 
+    color: var(--gold); 
+    text-decoration: none; 
     font-weight: 600;
+    transition: opacity 0.15s;
   }
-  .auth-switch a:hover {
+  
+  .auth-switch a:hover { 
     text-decoration: underline;
+    opacity: 0.8;
   }
-  .perks {
+  
+  /* Password strength indicator */
+  .password-strength {
+    margin-top: 6px;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+  }
+  
+  .strength-bar {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 24px;
+    gap: 6px;
+    margin-top: 4px;
   }
-  .perk {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12.5px;
-    color: var(--txt3);
+  
+  .strength-segment {
+    flex: 1;
+    height: 3px;
+    border-radius: 99px;
+    background: var(--surface3);
+    transition: all 0.2s;
   }
-  .perk i {
-    color: var(--gold);
-    font-size: 13px;
-    flex-shrink: 0;
+  
+  .strength-segment.active {
+    background: var(--low);
+  }
+  
+  .strength-segment.active.medium {
+    background: var(--med);
+  }
+  
+  .strength-segment.active.weak {
+    background: var(--high);
+  }
+  
+  .strength-text {
+    color: var(--txt4);
+    margin-top: 4px;
+  }
+  
+  /* Error message styling */
+  .form-error {
+    display: none;
+    background: var(--high-bg);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--high);
+    margin-bottom: 16px;
+    animation: slideIn 0.3s ease;
+  }
+  
+  .form-error.visible {
+    display: block;
+  }
+  
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes spin { 
+    to { transform: rotate(360deg); } 
   }
 </style>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-  const form   = document.getElementById('register-form');
-  const btn    = document.getElementById('register-btn');
-  const errBox = document.getElementById('form-error');
-
-  function showError(msg) {
-    errBox.textContent = msg;
-    errBox.style.display = 'block';
-  }
-  function clearError() {
-    errBox.style.display = 'none';
-    errBox.textContent = '';
-  }
-  function setLoading(on) {
-    btn.disabled = on;
-    btn.innerHTML = on
-      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Creating account…'
-      : '<i class="ti ti-rocket" style="margin-right:6px;"></i> Create Account';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearError();
-    setLoading(true);
-
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    try {
-      const res  = await fetch('/auth/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrf,
-        },
-        body: JSON.stringify({
-          username: document.getElementById('reg-username').value.trim(),
-          email:    document.getElementById('reg-email').value.trim(),
-          password: document.getElementById('reg-password').value,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        window.location.href = data.redirect;
-      } else {
-        showError(data.error || 'Something went wrong.');
-        setLoading(false);
-      }
-    } catch (err) {
-      showError('Network error — please try again.');
-      setLoading(false);
-    }
-  });
-</script>
-
-<style>
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-{% endblock %} {% block content %}
+{% block content %}
 <div class="auth-page">
   <div class="auth-card">
     <div class="auth-logo">
@@ -265,67 +343,45 @@
     <div class="auth-sub">Start reviewing contracts with AI — free.</div>
 
     <div class="perks">
-      <div class="perk">
-        <i class="ti ti-check"></i> Unlimited contract uploads
-      </div>
-      <div class="perk">
-        <i class="ti ti-check"></i> AI clause detection &amp; risk scoring
-      </div>
-      <div class="perk">
-        <i class="ti ti-check"></i> Multi-turn Q&amp;A with citations
-      </div>
+      <div class="perk"><i class="ti ti-check"></i> Unlimited contract uploads</div>
+      <div class="perk"><i class="ti ti-check"></i> AI clause detection &amp; risk scoring</div>
+      <div class="perk"><i class="ti ti-check"></i> Multi-turn Q&amp;A with citations</div>
     </div>
 
-    <div id="form-error" style="
-      display:none;
-      background: var(--high-bg);
-      border: 1px solid rgba(255,107,107,0.3);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 12.5px;
-      color: var(--high);
-      margin-bottom: 4px;
-    "></div>
+    <div class="form-error" id="form-error"></div>
 
     <form class="auth-form" id="register-form">
       {% csrf_token %}
       <div class="form-group">
         <label class="form-label">Username</label>
-        <input
-          class="form-input"
-          type="text"
-          id="reg-username"
-          name="username"
-          placeholder="choose_a_username"
-          autocomplete="username"
-          required
-        />
+        <input class="form-input" type="text" id="reg-username" name="username"
+          placeholder="choose_a_username" autocomplete="username" required />
       </div>
       <div class="form-group">
-        <label class="form-label">Email</label>
-        <input
-          class="form-input"
-          type="email"
-          id="reg-email"
-          name="email"
-          placeholder="you@example.com"
-          autocomplete="email"
-        />
+        <label class="form-label">Email <span style="color:var(--txt4);font-weight:400;">(optional)</span></label>
+        <input class="form-input" type="email" id="reg-email" name="email"
+          placeholder="you@example.com" autocomplete="email" />
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input
-          class="form-input"
-          type="password"
-          id="reg-password"
-          name="password"
-          placeholder="min 8 characters"
-          autocomplete="new-password"
-          required
-        />
+        <div class="password-wrapper">
+          <input class="form-input" type="password" id="reg-password" name="password"
+            placeholder="min 8 characters" autocomplete="new-password" required />
+          <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">
+            <i class="ti ti-eye"></i>
+          </button>
+        </div>
+        <div class="password-strength" id="password-strength" style="display: none;">
+          <div class="strength-bar">
+            <div class="strength-segment" id="strength-1"></div>
+            <div class="strength-segment" id="strength-2"></div>
+            <div class="strength-segment" id="strength-3"></div>
+          </div>
+          <div class="strength-text" id="strength-text"></div>
+        </div>
       </div>
       <button type="submit" class="auth-submit" id="register-btn">
-        <i class="ti ti-rocket" style="margin-right: 6px"></i> Create Account
+        <i class="ti ti-rocket" style="margin-right:8px;"></i> Create Account
       </button>
     </form>
 
@@ -341,57 +397,198 @@
   const form   = document.getElementById('register-form');
   const btn    = document.getElementById('register-btn');
   const errBox = document.getElementById('form-error');
+  const passwordInput = document.getElementById('reg-password');
+  const togglePassword = document.getElementById('togglePassword');
+  const strengthDiv = document.getElementById('password-strength');
+  const strengthText = document.getElementById('strength-text');
+  const strengthSegments = {
+    1: document.getElementById('strength-1'),
+    2: document.getElementById('strength-2'),
+    3: document.getElementById('strength-3')
+  };
 
-  function showError(msg) {
-    errBox.textContent = msg;
-    errBox.style.display = 'block';
+  function showError(msg) { 
+    errBox.textContent = msg; 
+    errBox.classList.add('visible'); 
   }
-  function clearError() {
-    errBox.style.display = 'none';
-    errBox.textContent = '';
+  
+  function clearError() { 
+    errBox.classList.remove('visible'); 
+    errBox.textContent = ''; 
   }
+  
   function setLoading(on) {
     btn.disabled = on;
     btn.innerHTML = on
-      ? '<i class="ti ti-loader-2" style="margin-right:6px;animation:spin 0.8s linear infinite;"></i> Creating account…'
-      : '<i class="ti ti-rocket" style="margin-right:6px;"></i> Create Account';
+      ? '<i class="ti ti-loader-2" style="margin-right:8px;animation:spin 0.8s linear infinite;"></i> Creating account…'
+      : '<i class="ti ti-rocket" style="margin-right:8px;"></i> Create Account';
   }
+
+  // Password strength checker
+  function checkPasswordStrength(password) {
+    if (!password) {
+      strengthDiv.style.display = 'none';
+      return;
+    }
+    
+    strengthDiv.style.display = 'block';
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
+    
+    // Contains number
+    if (/\d/.test(password)) strength++;
+    
+    // Contains lowercase
+    if (/[a-z]/.test(password)) strength++;
+    
+    // Contains uppercase
+    if (/[A-Z]/.test(password)) strength++;
+    
+    // Contains special character
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    // Calculate score (0-6)
+    let score = Math.min(strength, 6);
+    
+    // Reset segments
+    for (let i = 1; i <= 3; i++) {
+      strengthSegments[i].classList.remove('active', 'weak', 'medium');
+    }
+    
+    if (password.length < 6) {
+      // Very weak
+      strengthSegments[1].classList.add('active', 'weak');
+      strengthText.textContent = 'Very weak password';
+      strengthText.style.color = 'var(--high)';
+    } else if (score <= 2) {
+      // Weak
+      strengthSegments[1].classList.add('active', 'weak');
+      strengthText.textContent = 'Weak password';
+      strengthText.style.color = 'var(--high)';
+    } else if (score <= 4) {
+      // Medium
+      strengthSegments[1].classList.add('active', 'medium');
+      strengthSegments[2].classList.add('active', 'medium');
+      strengthText.textContent = 'Medium password';
+      strengthText.style.color = 'var(--med)';
+    } else {
+      // Strong
+      strengthSegments[1].classList.add('active');
+      strengthSegments[2].classList.add('active');
+      strengthSegments[3].classList.add('active');
+      strengthText.textContent = 'Strong password';
+      strengthText.style.color = 'var(--low)';
+    }
+  }
+
+  // Toggle password visibility
+  togglePassword.addEventListener('click', function() {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    // Toggle eye icon
+    const icon = this.querySelector('i');
+    if (type === 'text') {
+      icon.classList.remove('ti-eye');
+      icon.classList.add('ti-eye-off');
+    } else {
+      icon.classList.remove('ti-eye-off');
+      icon.classList.add('ti-eye');
+    }
+  });
+
+  // Password strength check on input
+  passwordInput.addEventListener('input', function() {
+    checkPasswordStrength(this.value);
+  });
+
+  // Username availability check
+  let usernameTimeout;
+  const usernameInput = document.getElementById('reg-username');
+  
+  async function checkUsernameAvailability(username) {
+    if (username.length < 3) return;
+    try {
+      const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      const res = await fetch('/auth/api/check-username/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+        body: JSON.stringify({ username: username })
+      });
+      const data = await res.json();
+      if (!data.available && data.exists) {
+        showError('Username already taken. Please choose another.');
+        return false;
+      }
+      clearError();
+      return true;
+    } catch(e) {
+      return true;
+    }
+  }
+  
+  usernameInput.addEventListener('input', function() {
+    clearTimeout(usernameTimeout);
+    const val = this.value.trim();
+    if (val.length >= 3) {
+      usernameTimeout = setTimeout(() => {
+        checkUsernameAvailability(val);
+      }, 500);
+    }
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearError();
+    
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    
+    // Validation
+    if (!username || username.length < 3) {
+      showError('Username must be at least 3 characters long.');
+      return;
+    }
+    
+    if (password.length < 8) {
+      showError('Password must be at least 8 characters long.');
+      return;
+    }
+    
     setLoading(true);
-
+    
     const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
+    
     try {
-      const res  = await fetch('/auth/register/', {
+      const res = await fetch('/auth/api/register/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrf,
-        },
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
         body: JSON.stringify({
-          username: document.getElementById('reg-username').value.trim(),
-          email:    document.getElementById('reg-email').value.trim(),
-          password: document.getElementById('reg-password').value,
+          username: username,
+          email: email,
+          password: password,
+          password2: password,
         }),
       });
+      
       const data = await res.json();
+      
       if (data.success) {
-        window.location.href = data.redirect;
+        window.location.href = data.redirect || '/dashboard/';
       } else {
-        showError(data.error || 'Something went wrong.');
+        const err = data.errors
+          ? Object.values(data.errors)[0][0]
+          : (data.error || 'Something went wrong.');
+        showError(err);
         setLoading(false);
       }
     } catch (err) {
-      showError('Network error — please try again.');
+      showError('Network error — please check your connection and try again.');
       setLoading(false);
     }
   });
 </script>
-
-<style>
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
 {% endblock %}
