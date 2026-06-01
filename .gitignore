@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 db.sqlite3
 .env
+
+chroma_db/
+media/
+*.sqlite3
