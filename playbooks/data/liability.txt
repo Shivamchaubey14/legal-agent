@@ -1,0 +1,34 @@
+CLAUSE_TYPE: Limitation of Liability
+SOURCE: Liability Clauses Playbook
+
+STANDARD CLAUSE:
+In no event shall either party be liable for any indirect, incidental, special, exemplary, punitive, or consequential damages, including but not limited to loss of profits, loss of data, or business interruption, even if advised of the possibility of such damages. Each party's total cumulative liability shall not exceed the total fees paid in the twelve months preceding the claim.
+
+RISK INDICATORS:
+- No monetary cap on liability is CRITICAL risk
+- Liability cap below 6 months of contract value is HIGH risk
+- Exclusion of all consequential damages regardless of cause is HIGH risk
+- No carve-out for fraud or willful misconduct is HIGH risk
+- No carve-out for IP infringement claims is HIGH risk
+- One-sided liability limitation favoring vendor is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Cap liability at 12 months of fees paid. Exclude indirect damages but carve out fraud, gross negligence, willful misconduct, death or personal injury, and IP indemnification from the cap.
+
+---
+
+CLAUSE_TYPE: Indemnification
+SOURCE: Liability Clauses Playbook
+
+STANDARD CLAUSE:
+Each party shall indemnify, defend, and hold harmless the other party and its officers, directors, employees, and agents from and against any third-party claims, damages, losses, and expenses arising from the indemnifying party's breach of this Agreement or negligent acts or omissions.
+
+RISK INDICATORS:
+- One-sided indemnification obligation is HIGH risk
+- No cap on indemnification obligation is HIGH risk
+- Indemnification for ALL claims including own negligence is HIGH risk
+- No requirement for prompt notice of claims is MEDIUM risk
+- No right to control defense of claims is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Mutual indemnification limited to breaches of the agreement and gross negligence. Cap indemnification at contract value. Require prompt notice and option to control defense. Exclude claims arising from the other party's own negligence.

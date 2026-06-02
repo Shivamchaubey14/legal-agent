@@ -1,0 +1,32 @@
+CLAUSE_TYPE: Termination
+SOURCE: Termination Clauses Playbook
+
+STANDARD CLAUSE:
+Either party may terminate this Agreement for convenience upon thirty (30) days prior written notice to the other party. Either party may terminate this Agreement immediately upon written notice if the other party materially breaches any provision and fails to cure such breach within fifteen (15) days after receiving written notice.
+
+RISK INDICATORS:
+- Termination notice period less than 30 days is HIGH risk
+- No cure period for breach is HIGH risk
+- Only one party has termination rights is HIGH risk
+- No definition of material breach is MEDIUM risk
+- Automatic termination clauses without notice are HIGH risk
+
+RECOMMENDED LANGUAGE:
+Include mutual termination rights with minimum 60 days notice for convenience. For cause termination, require written notice and a 30-day cure period. Define what constitutes a material breach explicitly.
+
+---
+
+CLAUSE_TYPE: Termination Consequences
+SOURCE: Termination Clauses Playbook
+
+STANDARD CLAUSE:
+Upon termination, all licenses granted hereunder shall immediately terminate. Each party shall promptly return or destroy all Confidential Information of the other party. Outstanding payment obligations shall survive termination.
+
+RISK INDICATORS:
+- No transition assistance requirement is MEDIUM risk
+- Immediate termination of all rights without wind-down period is HIGH risk
+- No data return or deletion obligation is HIGH risk
+- Survival clauses not explicitly listed is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Include a 30 to 90 day wind-down period after termination notice. Explicitly list all clauses that survive termination including payment, confidentiality, IP, and indemnification.

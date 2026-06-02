@@ -1,0 +1,47 @@
+CLAUSE_TYPE: Confidentiality
+SOURCE: NDA Standard Playbook
+
+STANDARD CLAUSE:
+Each party agrees to hold in strict confidence all Confidential Information received from the other party and shall not disclose such information to any third party without prior written consent. This obligation shall survive termination of this agreement for a period of three (3) years.
+
+RISK INDICATORS:
+- Confidentiality period less than 2 years is HIGH risk
+- No survival clause after termination is HIGH risk
+- One-sided confidentiality obligation is MEDIUM risk
+- No definition of Confidential Information is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Both parties agree to maintain the confidentiality of all Confidential Information for a minimum period of five (5) years from the date of disclosure, and indefinitely with respect to trade secrets.
+
+---
+
+CLAUSE_TYPE: Non-Compete
+SOURCE: NDA Standard Playbook
+
+STANDARD CLAUSE:
+During the term of this agreement and for a period of one (1) year following its termination, neither party shall directly or indirectly engage in any business that competes with the other party's primary business activities in the same geographic market.
+
+RISK INDICATORS:
+- Non-compete period exceeding 2 years is HIGH risk
+- No geographic limitation is HIGH risk
+- Overly broad scope covering all industries is HIGH risk
+- No carve-out for existing business activities is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Non-compete restrictions should be limited to 12 months, specific geographic regions where the disclosing party actively operates, and narrowly defined competing activities directly related to the disclosed information.
+
+---
+
+CLAUSE_TYPE: Governing Law
+SOURCE: NDA Standard Playbook
+
+STANDARD CLAUSE:
+This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of law provisions. Any disputes shall be resolved through binding arbitration.
+
+RISK INDICATORS:
+- Governing law in foreign jurisdiction is MEDIUM risk
+- No dispute resolution mechanism is HIGH risk
+- Mandatory litigation only with no arbitration option is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Specify governing law in a jurisdiction favorable to your business. Include tiered dispute resolution: negotiation first, then mediation, then binding arbitration as a last resort.

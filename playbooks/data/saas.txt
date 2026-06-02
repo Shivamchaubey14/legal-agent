@@ -1,0 +1,51 @@
+CLAUSE_TYPE: Service Level Agreement
+SOURCE: SaaS Contract Playbook
+
+STANDARD CLAUSE:
+Provider shall use commercially reasonable efforts to make the Service available with a monthly uptime percentage of at least 99.9 percent, excluding scheduled maintenance windows and force majeure events.
+
+RISK INDICATORS:
+- SLA below 99.5 percent uptime is HIGH risk
+- No financial remedy for SLA breach is HIGH risk
+- Broad exclusions that make SLA unenforceable are HIGH risk
+- No definition of downtime calculation methodology is MEDIUM risk
+- Scheduled maintenance windows not capped in hours is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Require 99.9 percent uptime SLA with financial credits for breaches. Service credits of 10 percent of monthly fees for each hour of downtime beyond SLA. Cap scheduled maintenance at 4 hours per month with 48 hours advance notice.
+
+---
+
+CLAUSE_TYPE: Data Privacy
+SOURCE: SaaS Contract Playbook
+
+STANDARD CLAUSE:
+Provider shall implement and maintain appropriate technical and organizational measures to protect Customer Data against unauthorized access, disclosure, alteration, or destruction, consistent with industry standards and applicable data protection laws.
+
+RISK INDICATORS:
+- No data breach notification obligation is CRITICAL risk
+- Data breach notification window exceeding 72 hours is HIGH risk
+- No prohibition on selling customer data is CRITICAL risk
+- No data deletion obligation upon termination is HIGH risk
+- No restriction on data processing location is MEDIUM risk
+- No sub-processor approval rights is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Require breach notification within 48 hours. Prohibit sale or use of customer data for any purpose other than providing the service. Ensure data deletion within 30 days of termination. Restrict data processing to agreed jurisdictions.
+
+---
+
+CLAUSE_TYPE: Auto-Renewal
+SOURCE: SaaS Contract Playbook
+
+STANDARD CLAUSE:
+This Agreement shall automatically renew for successive one-year terms unless either party provides written notice of non-renewal at least sixty (60) days prior to the end of the then-current term.
+
+RISK INDICATORS:
+- Auto-renewal with less than 30 days cancellation notice is HIGH risk
+- No price lock during renewal period is HIGH risk
+- Renewal at increased price without consent is HIGH risk
+- No cap on number of automatic renewal cycles is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Auto-renewal requires minimum 90 days cancellation notice. Price for renewal period locked at current rates unless mutual agreement. Include reminder obligation from vendor 120 days before renewal.

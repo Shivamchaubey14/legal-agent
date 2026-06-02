@@ -1,0 +1,48 @@
+CLAUSE_TYPE: Non-Solicitation
+SOURCE: Employment Contract Playbook
+
+STANDARD CLAUSE:
+During the term of employment and for a period of twelve (12) months following termination, the employee shall not directly or indirectly solicit, recruit, or hire any employees or contractors of the Company.
+
+RISK INDICATORS:
+- Non-solicitation period exceeding 24 months is HIGH risk
+- Covers passive solicitation such as responding to applications is HIGH risk
+- Applies globally without geographic limitation is MEDIUM risk
+- Applies to all employees not just those employee worked with is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Limit non-solicitation to 12 months post-termination. Restrict only active solicitation of employees with whom the departing employee directly worked. Carve out responses to general public advertising.
+
+---
+
+CLAUSE_TYPE: At-Will Employment
+SOURCE: Employment Contract Playbook
+
+STANDARD CLAUSE:
+Employment is at-will, meaning either party may terminate the employment relationship at any time, with or without cause, and with or without advance notice, subject to applicable law.
+
+RISK INDICATORS:
+- No severance provision upon termination without cause is HIGH risk
+- No minimum notice period despite at-will status is MEDIUM risk
+- No definition of cause for termination is MEDIUM risk
+- Waiver of all claims upon termination is HIGH risk
+
+RECOMMENDED LANGUAGE:
+Even in at-will employment, provide minimum 2 weeks notice or pay in lieu. Include severance of 1 to 4 weeks per year of service for termination without cause. Define cause explicitly.
+
+---
+
+CLAUSE_TYPE: Severance
+SOURCE: Employment Contract Playbook
+
+STANDARD CLAUSE:
+In the event of termination without cause, Employee shall receive severance pay equal to two weeks base salary for each completed year of service, up to a maximum of twenty-six weeks.
+
+RISK INDICATORS:
+- No severance for long-tenured employees is HIGH risk
+- Severance conditioned on signing broad release is HIGH risk
+- No continuation of benefits during severance period is MEDIUM risk
+- Clawback provisions on severance are MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Provide at least 1 month severance per year of service. Continue health benefits during severance period. Allow reasonable time to review and sign any release agreement minimum 21 days.
