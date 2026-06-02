@@ -265,3 +265,28 @@ class EmbedStatsAPIView(APIView):
         from .utils.embedder import get_collection_stats
         stats = get_collection_stats()
         return Response({'success': True, **stats})
+    
+class ContractFlagsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        from contracts.models import ClauseFlag
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+        flags    = ClauseFlag.objects.filter(contract=contract)
+
+        data = [{
+            'id':          f.id,
+            'clause_type': f.clause_type,
+            'risk_level':  f.risk_level,
+            'clause_text': f.clause_text,
+            'reason':      f.reason,
+            'suggestion':  f.suggestion,
+        } for f in flags]
+
+        return Response({
+            'success':    True,
+            'contract_id': pk,
+            'risk_score': contract.risk_score,
+            'flags':      data,
+            'count':      len(data),
+        })

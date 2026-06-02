@@ -34,4 +34,7 @@ urlpatterns = [
     
     path('api/dashboard/stats/',
          views.DashboardStatsAPIView.as_view(), name='api_dashboard_stats'),
+    
+    path('api/contracts/<int:pk>/flags/',
+     views.ContractFlagsAPIView.as_view(), name='api_contract_flags'),
 ]
