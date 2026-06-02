@@ -10,7 +10,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 # ── Tesseract path (Windows) ─────────────────────────────────
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = (
+    r'C:\Users\Shwetdhara\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+)
 
 
 class ContractParser:

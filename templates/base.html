@@ -12,7 +12,6 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* Core palette — deep ink with legal parchment accents */
       --bg:          #0A0B0F;
       --bg2:         #0F1117;
       --bg3:         #141720;
@@ -29,13 +28,11 @@
       --txt3:        #575F78;
       --txt4:        #323849;
 
-      /* Gold accent — legal authority */
       --gold:        #C9A84C;
       --gold-light:  #E8C96A;
       --gold-dim:    rgba(201,168,76,0.12);
       --gold-glow:   rgba(201,168,76,0.22);
 
-      /* Risk colors */
       --low:         #3DD68C;
       --low-bg:      rgba(61,214,140,0.10);
       --med:         #F5A623;
@@ -57,17 +54,16 @@
     }
 
     html, body {
-        height: 100%;
-        min-height: 100%;
-        font-family: 'Geist', sans-serif;
-        background: var(--bg);
-        color: var(--txt);
-        font-size: 14px;
-        line-height: 1.6;
-        -webkit-font-smoothing: antialiased;
+      height: 100%;
+      min-height: 100%;
+      font-family: 'Geist', sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Subtle grain overlay */
     body::before {
       content: '';
       position: fixed; inset: 0;
@@ -184,6 +180,18 @@
     .btn-danger { border-color: rgba(255,107,107,0.3); color: var(--high); }
     .btn-danger:hover { background: var(--high-bg); border-color: var(--high); }
 
+    /* ── Logout button ── */
+    .btn-logout {
+      background: transparent;
+      border-color: rgba(255, 107, 107, 0.2);
+      color: rgba(255, 107, 107, 0.7);
+    }
+    .btn-logout:hover {
+      background: var(--high-bg);
+      border-color: rgba(255, 107, 107, 0.5);
+      color: var(--high);
+    }
+
     /* ── Form elements ── */
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-label {
@@ -261,12 +269,12 @@
 
     /* ── Page wrapper ── */
     .page {
-    position: relative;
-    z-index: 1;
-    min-height: calc(100vh - 58px);
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 58px);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
 
     /* Scrollbar */
@@ -287,7 +295,6 @@
 </div>
 {% endif %}
 
-<!-- ── Navbar ── -->
 <nav class="navbar">
   <a href="/" class="nav-brand">
     <div class="nav-logo"><i class="ti ti-scale"></i></div>
@@ -295,15 +302,12 @@
   </a>
 
   {% if user.is_authenticated %}
-  <ul class="nav-links">
-    <li><a href="/dashboard/" class="{% block nav_dashboard %}{% endblock %}">Dashboard</a></li>
-  </ul>
   <div class="nav-end">
     <div class="nav-user">
       <div class="nav-avatar">{{ user.username|slice:":1"|upper }}</div>
       <span>{{ user.username }}</span>
     </div>
-    <a href="/auth/logout/" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">
+    <a href="/auth/logout/" class="btn btn-logout" style="padding:6px 12px;font-size:12px;">
       <i class="ti ti-logout"></i> Logout
     </a>
   </div>
@@ -321,7 +325,6 @@
 
 {% block extra_js %}{% endblock %}
 <script>
-  // Auto-dismiss messages
   setTimeout(() => {
     document.querySelectorAll('.message').forEach(m => {
       m.style.transition = 'opacity 0.4s';

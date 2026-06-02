@@ -1,5 +1,6 @@
 import os
 import logging
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 
 logger = logging.getLogger(__name__)
@@ -110,38 +111,10 @@ class ContractUploadAPIView(APIView):
             status    = 'processing',
         )
 
-        # ── Parse + Embed (Day 8 moves this to Celery) ──────
-        try:
-            from .utils.pdf_parser import parse_contract_file
-            from .utils.embedder   import embed_contract
-
-            # Step 1 — Parse
-            result = parse_contract_file(file_path)
-
-            contract.raw_text   = result['text']
-            contract.page_count = result['page_count']
-
-            if result['error']:
-                contract.status = 'error'
-                contract.save()
-            else:
-                contract.status = 'processing'
-                contract.save()
-
-                # Step 2 — Embed
-                embed_result = embed_contract(contract.id, result['text'])
-                logger.info(
-                    f'Contract {contract.id} embedded — '
-                    f'{embed_result["chunks"]} chunks, '
-                    f'method: {result["method"]}'
-                )
-                contract.status = 'done'
-                contract.save()
-
-        except Exception as e:
-            logger.error(f'Parse/embed failed for contract {contract.id}: {e}')
-            contract.status = 'error'
-            contract.save()
+        # ── Fire async Celery task ────────────────────────────
+        from .tasks import process_contract
+        process_contract.delay(contract.id)
+        logger.info(f'Contract {contract.id} queued for async processing')
 
         return Response({
             'success':  True,

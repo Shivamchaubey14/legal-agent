@@ -1,0 +1,33 @@
+CLAUSE_TYPE: Payment Terms
+SOURCE: Payment Clauses Playbook
+
+STANDARD CLAUSE:
+Client shall pay all undisputed invoices within thirty (30) days of receipt. Late payments shall accrue interest at the rate of one and one-half percent (1.5%) per month or the maximum rate permitted by law. Vendor reserves the right to suspend services for invoices more than sixty (60) days past due.
+
+RISK INDICATORS:
+- Payment terms less than 15 days is HIGH risk
+- Interest rate above 2 percent per month is HIGH risk
+- Right to suspend without notice is HIGH risk
+- No dispute resolution process for invoices is MEDIUM risk
+- Automatic price escalation clauses are MEDIUM risk
+- No requirement for itemized invoices is LOW risk
+
+RECOMMENDED LANGUAGE:
+Net 30 payment terms standard. Late fees capped at 1.5 percent per month. Require 15 days written notice before service suspension. Include clear invoice dispute process with 10 business days to raise disputes.
+
+---
+
+CLAUSE_TYPE: Price Changes
+SOURCE: Payment Clauses Playbook
+
+STANDARD CLAUSE:
+Vendor may adjust pricing upon thirty (30) days written notice to Client. Price increases shall not exceed five percent (5%) in any twelve-month period without Client's prior written approval.
+
+RISK INDICATORS:
+- Unilateral price changes without notice are CRITICAL risk
+- Price increases exceeding 10 percent annually are HIGH risk
+- No cap on price escalation over contract term is HIGH risk
+- Price changes effective immediately without consent are HIGH risk
+
+RECOMMENDED LANGUAGE:
+Price increases require 90 days notice and client written consent for increases above 5 percent. Include most-favored-nation pricing clause. Lock prices for initial contract term.

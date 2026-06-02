@@ -1,0 +1,32 @@
+CLAUSE_TYPE: Intellectual Property
+SOURCE: IP Ownership Playbook
+
+STANDARD CLAUSE:
+All intellectual property, including inventions, discoveries, developments, improvements, and works of authorship, created by either party in connection with this Agreement shall be owned by the party that created it. Any jointly developed IP shall be jointly owned with each party having the right to exploit without accounting to the other.
+
+RISK INDICATORS:
+- All IP assigned to one party without compensation is HIGH risk
+- No license back for improvements to pre-existing IP is HIGH risk
+- Work-for-hire language that transfers all rights is HIGH risk
+- No carve-out for pre-existing IP and background technology is HIGH risk
+- Joint ownership without clear exploitation rights is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+Each party retains ownership of their pre-existing IP. New IP created solely by one party is owned by that party. Jointly developed IP requires a separate written agreement. Grant only necessary licenses to perform the agreement.
+
+---
+
+CLAUSE_TYPE: License Grant
+SOURCE: IP Ownership Playbook
+
+STANDARD CLAUSE:
+Subject to the terms of this Agreement, each party grants to the other a limited, non-exclusive, non-transferable, revocable license to use the other party's intellectual property solely as necessary to perform its obligations under this Agreement.
+
+RISK INDICATORS:
+- Perpetual irrevocable license grant is HIGH risk
+- Sublicensable license without restriction is HIGH risk
+- Transferable license that survives assignment is MEDIUM risk
+- License scope not limited to agreement purposes is MEDIUM risk
+
+RECOMMENDED LANGUAGE:
+License grants should be limited, non-exclusive, non-transferable, non-sublicensable, revocable upon termination, and strictly scoped to the purpose of the agreement.
