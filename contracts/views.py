@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
@@ -32,10 +33,13 @@ def index(request):
 def dashboard(request):
     contracts = Contract.objects.filter(user=request.user)
     return render(request, 'dashboard.html', {
-        'contracts': contracts,
-        'total':     contracts.count(),
-        'high_risk': contracts.filter(risk_score__in=['high', 'critical']).count(),
-        'done':      contracts.filter(status='done').count(),
+        'contracts':  contracts,
+        'total':      contracts.count(),
+        'high_risk':  contracts.filter(risk_score__in=['high', 'critical']).count(),
+        'done':       contracts.filter(status='done').count(),
+        'processing': contracts.filter(status='processing').count(),
+        'pending':    contracts.filter(status='pending').count(),
+        'errors':     contracts.filter(status='error').count(),
     })
 
 
@@ -114,48 +118,32 @@ class ContractUploadAPIView(APIView):
         # ── Trigger async Celery pipeline ────────────────────
         try:
             from .tasks import process_contract
-
             process_contract.delay(contract.id)
-
-            logger.info(
-                f'Queued contract {contract.id} for async processing'
-            )
+            logger.info(f'Queued contract {contract.id} for async processing')
 
         except Exception as e:
-
-            # If Redis/Celery is unavailable, fall back
-            logger.warning(
-                f'Celery unavailable, running sync: {e}'
-            )
+            # If Redis/Celery is unavailable, fall back to sync
+            logger.warning(f'Celery unavailable, running sync: {e}')
 
             try:
                 from .utils.pdf_parser import parse_contract_file
-                from .utils.embedder import embed_contract
+                from .utils.embedder   import embed_contract
 
                 result = parse_contract_file(file_path)
 
-                contract.raw_text = result['text']
+                contract.raw_text   = result['text']
                 contract.page_count = result['page_count']
 
                 if result.get('error'):
                     contract.status = 'error'
                     contract.save()
-
                 else:
-                    embed_contract(
-                        contract.id,
-                        result['text']
-                    )
-
+                    embed_contract(contract.id, result['text'])
                     contract.status = 'done'
                     contract.save()
 
             except Exception as e2:
-
-                logger.error(
-                    f'Sync fallback failed: {e2}'
-                )
-
+                logger.error(f'Sync fallback failed: {e2}')
                 contract.status = 'error'
                 contract.save()
 
@@ -211,8 +199,10 @@ class ContractStatusAPIView(APIView):
             'status':     contract.status,
             'risk_score': contract.risk_score,
             'page_count': contract.page_count,
+            'title':      contract.title,
         })
-        
+
+
 # ── API: Raw text preview ────────────────────────────────────
 class ContractTextAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -226,17 +216,17 @@ class ContractTextAPIView(APIView):
             'title':      contract.title,
             'page_count': contract.page_count,
             'char_count': len(text),
-            'preview':    text[:2000],   # first 2000 chars
+            'preview':    text[:2000],
             'full_text':  text,
         })
-        
+
+
 # ── API: Dashboard stats ─────────────────────────────────────
 class DashboardStatsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         from django.utils.timezone import now
-        from datetime import timedelta
 
         contracts  = Contract.objects.filter(user=request.user)
         this_month = contracts.filter(
@@ -251,7 +241,8 @@ class DashboardStatsAPIView(APIView):
             'avg_processing_time': '–',
             'pending_qa':          0,
         })
-        
+
+
 # ── API: Embed a contract manually ──────────────────────────
 class ContractEmbedAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -308,131 +299,345 @@ class EmbedStatsAPIView(APIView):
         from .utils.embedder import get_collection_stats
         stats = get_collection_stats()
         return Response({'success': True, **stats})
-    
+
+
+# ── API: Get clause flags for a contract ─────────────────────
 class ContractFlagsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        from contracts.models import ClauseFlag
+        from .models import ClauseFlag
 
-        contract = get_object_or_404(
-            Contract,
-            pk=pk,
-            user=request.user
-        )
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+        flags    = ClauseFlag.objects.filter(contract=contract)
 
-        flags = ClauseFlag.objects.filter(contract=contract)
-
-        high_count = flags.filter(
-            risk_level__in=['high', 'critical']
-        ).count()
-
-        medium_count = flags.filter(
-            risk_level='medium'
-        ).count()
-
-        low_count = flags.filter(
-            risk_level='low'
-        ).count()
+        high_count   = flags.filter(risk_level__in=['high', 'critical']).count()
+        medium_count = flags.filter(risk_level='medium').count()
+        low_count    = flags.filter(risk_level='low').count()
 
         flag_data = []
-
         for flag in flags:
             flag_data.append({
-                'id': flag.id,
+                'id':          flag.id,
                 'clause_type': flag.clause_type,
-                'risk_level': flag.risk_level,
+                'risk_level':  flag.risk_level,
                 'clause_text': flag.clause_text,
-                'reason': flag.reason,
-                'suggestion': flag.suggestion,
+                'reason':      flag.reason,
+                'suggestion':  flag.suggestion,
                 'page_number': flag.page_number,
-                'start_char': flag.start_char,
-                'end_char': flag.end_char,
-                'created_at': flag.created_at,
+                'start_char':  flag.start_char,
+                'end_char':    flag.end_char,
+                'created_at':  flag.created_at,
             })
 
         return Response({
             'success': True,
-
             'contract': {
-                'id': contract.id,
-                'title': contract.title,
-                'status': contract.status,
+                'id':         contract.id,
+                'title':      contract.title,
+                'status':     contract.status,
                 'risk_score': contract.risk_score,
                 'page_count': contract.page_count,
                 'created_at': contract.created_at,
             },
-
             'summary': {
                 'total_flags': flags.count(),
-                'high_risk': high_count,
+                'high_risk':   high_count,
                 'medium_risk': medium_count,
-                'low_risk': low_count,
+                'low_risk':    low_count,
             },
-
             'flags': flag_data,
         })
-        
+
+
+# ── API: Contract review (for JS fetch) ─────────────────────
 class ContractReviewAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-
-        contract = get_object_or_404(
-            Contract,
-            pk=pk,
-            user=request.user
-        )
-
-        flags = contract.flags.all()
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+        flags    = contract.clause_flags.all()
 
         return Response({
-            'success': True,
-
+            'success':    True,
             'contract_id': contract.id,
-            'title': contract.title,
-            'status': contract.status,
-
+            'title':      contract.title,
+            'status':     contract.status,
             'risk_score': contract.risk_score,
-
             'page_count': contract.page_count,
-
-            'raw_text': contract.raw_text,
-
+            'raw_text':   contract.raw_text,
             'flags': [
                 {
-                    'id': f.id,
-                    'type': f.clause_type,
-                    'risk': f.risk_level,
-                    'text': f.clause_text,
-                    'reason': f.reason,
-                    'suggestion': f.suggestion,
+                    'id':          f.id,
+                    'type':        f.clause_type,
+                    'risk':        f.risk_level,
+                    'text':        f.clause_text,
+                    'reason':      f.reason,
+                    'suggestion':  f.suggestion,
                     'page_number': f.page_number,
                 }
                 for f in flags
             ]
         })
-        
+
+
+# ── Template view: Contract review page ─────────────────────
 @login_required
 def contract_review_page(request, pk):
     from .models import ClauseFlag
-    
+    from .utils.agent import clean_ocr_text, strip_stamp_paper_header
+
     contract = get_object_or_404(Contract, pk=pk, user=request.user)
-    flags = ClauseFlag.objects.filter(contract=contract)
-    
-    # Convert flags to a list of dicts for template
+    flags    = ClauseFlag.objects.filter(contract=contract)
+
+    # Clean the raw_text before showing in template
+    raw_text = contract.raw_text or ''
+    raw_text = clean_ocr_text(raw_text)
+    raw_text = strip_stamp_paper_header(raw_text)
+
     flags_data = []
     for flag in flags:
         flags_data.append({
-            'type': flag.clause_type,
-            'risk': flag.risk_level,
-            'text': flag.clause_text,
-            'reason': flag.reason,
-            'suggestion': flag.suggestion,
+            'type':        flag.clause_type,
+            'risk':        flag.risk_level,
+            'text':        flag.clause_text,
+            'reason':      flag.reason,
+            'suggestion':  flag.suggestion,
             'page_number': flag.page_number,
         })
-    
+
     return render(request, 'contract_review.html', {
-        'contract': contract,
-        'flags': flags_data,
+        'contract':  contract,
+        'raw_text':  raw_text,
+        'flags':     flags_data,
     })
+
+
+# ── API: Run clause detection agent ─────────────────────────
+class ContractAnalyzeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+
+        if not contract.raw_text:
+            return Response({
+                'success': False,
+                'error':   'Contract has no text. Upload and parse first.',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        contract.status = 'processing'
+        contract.save()
+
+        try:
+            from .utils.agent        import run_clause_detection_agent
+            from .utils.clause_saver import save_clause_flags
+            from .serializers        import ClauseFlagSerializer
+
+            result = run_clause_detection_agent(contract.id, contract.raw_text)
+
+            if not result['success']:
+                contract.status = 'error'
+                contract.save()
+                return Response({
+                    'success': False,
+                    'error':   result['error'],
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            saved = save_clause_flags(contract, result['flags'])
+            # Compute overall contract risk score
+            from .utils.agent import RISK_WEIGHTS
+
+            flags_qs = ClauseFlag.objects.filter(contract=contract)
+            total_weight = sum(RISK_WEIGHTS.get(f.risk_level, 1) for f in flags_qs)
+            count = flags_qs.count()
+
+            if count == 0:
+                contract.risk_score = 'low'
+            elif total_weight >= count * 2.5:
+                contract.risk_score = 'critical'
+            elif total_weight >= count * 2.0:
+                contract.risk_score = 'high'
+            elif total_weight >= count * 1.5:
+                contract.risk_score = 'medium'
+            else:
+                contract.risk_score = 'low'
+
+            contract.save()
+
+            from .models import ClauseFlag
+            flags = ClauseFlag.objects.filter(contract=contract)
+
+            return Response({
+                'success':     True,
+                'total_flags': saved,
+                'flags':       ClauseFlagSerializer(flags, many=True).data,
+            })
+
+        except Exception as e:
+            logger.error(f'Agent error for contract {pk}: {e}')
+            contract.status = 'error'
+            contract.save()
+            return Response({
+                'success': False,
+                'error':   str(e),
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+# ── API: Bulk Export ZIP ─────────────────────────────────────
+class BulkExportAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        import zipfile
+        import io
+        from django.http import HttpResponse
+
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'success': False, 'error': 'No contract IDs provided.'}, status=400)
+
+        contracts = Contract.objects.filter(pk__in=ids, user=request.user)
+        if not contracts.exists():
+            return Response({'success': False, 'error': 'No contracts found.'}, status=404)
+
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for contract in contracts:
+                if contract.raw_text:
+                    safe_title = re.sub(r'[^\w\s-]', '', contract.title)[:50]
+                    filename   = f"{safe_title}_{contract.id}.txt"
+                    zf.writestr(filename, contract.raw_text)
+                if contract.file_path and os.path.exists(contract.file_path):
+                    orig_filename = os.path.basename(contract.file_path)
+                    zf.write(contract.file_path, f"originals/{orig_filename}")
+
+        buffer.seek(0)
+        response = HttpResponse(buffer.read(), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="contracts_export.zip"'
+        response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+        return response
+
+
+# ── API: Bulk Re-run Analysis ────────────────────────────────
+class BulkRerunAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'success': False, 'error': 'No contract IDs provided.'}, status=400)
+
+        contracts = Contract.objects.filter(pk__in=ids, user=request.user)
+        queued    = []
+        failed    = []
+
+        for contract in contracts:
+            if not contract.raw_text:
+                failed.append(contract.id)
+                continue
+            try:
+                contract.status = 'processing'
+                contract.save()
+                from .tasks import process_contract
+                process_contract.delay(contract.id)
+                queued.append(contract.id)
+            except Exception:
+                # Sync fallback
+                try:
+                    from .utils.agent        import run_clause_detection_agent
+                    from .utils.clause_saver import save_clause_flags
+                    contract.clause_flags.all().delete()
+                    result = run_clause_detection_agent(contract.id, contract.raw_text)
+                    if result['success']:
+                        save_clause_flags(contract, result['flags'])
+                        contract.status = 'done'
+                    else:
+                        contract.status = 'error'
+                    contract.save()
+                    queued.append(contract.id)
+                except Exception as e2:
+                    logger.error(f'Re-run failed for {contract.id}: {e2}')
+                    contract.status = 'error'
+                    contract.save()
+                    failed.append(contract.id)
+
+        return Response({
+            'success': True,
+            'queued':  queued,
+            'failed':  failed,
+            'message': f'{len(queued)} contract(s) queued for re-analysis.',
+        })
+
+
+# ── API: Bulk Assign ─────────────────────────────────────────
+class BulkAssignAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        ids      = request.data.get('ids', [])
+        assignee = request.data.get('assignee', '').strip()
+
+        if not ids:
+            return Response({'success': False, 'error': 'No contract IDs provided.'}, status=400)
+        if not assignee:
+            return Response({'success': False, 'error': 'Assignee is required.'}, status=400)
+
+        contracts = Contract.objects.filter(pk__in=ids, user=request.user)
+
+        # Store assignee as a note in each contract's title metadata
+        # (extend your Contract model with an `assignee` field later)
+        assigned = []
+        for contract in contracts:
+            # For now tag the assignee in a notes field if it exists,
+            # or just track in response — extend model as needed
+            assigned.append({
+                'id':    contract.id,
+                'title': contract.title,
+            })
+
+        return Response({
+            'success':  True,
+            'assignee': assignee,
+            'assigned': assigned,
+            'message':  f'{len(assigned)} contract(s) assigned to {assignee}.',
+        })
+
+
+# ── API: Bulk Delete ─────────────────────────────────────────
+class BulkDeleteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'success': False, 'error': 'No contract IDs provided.'}, status=400)
+
+        contracts = Contract.objects.filter(pk__in=ids, user=request.user)
+        deleted   = []
+
+        for contract in contracts:
+            # Delete ChromaDB embeddings
+            try:
+                from .utils.embedder import delete_contract_embeddings
+                delete_contract_embeddings(contract.id)
+            except Exception as e:
+                logger.warning(f'ChromaDB cleanup failed for {contract.id}: {e}')
+
+            # Delete file from disk
+            if contract.file_path and os.path.exists(contract.file_path):
+                try:
+                    os.remove(contract.file_path)
+                except Exception as e:
+                    logger.warning(f'File delete failed for {contract.id}: {e}')
+
+            deleted.append(contract.id)
+            contract.delete()
+
+        return Response({
+            'success': True,
+            'deleted': deleted,
+            'message': f'{len(deleted)} contract(s) deleted.',
+        })
