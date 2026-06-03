@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'contracts',
     'users',
     'playbooks',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,17 @@ LOGOUT_REDIRECT_URL = '/'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+# ── Celery ───────────────────────────────────────────────────
+CELERY_BROKER_URL         = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND     = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT     = ['json']
+CELERY_TASK_SERIALIZER    = 'json'
+CELERY_RESULT_SERIALIZER  = 'json'
+CELERY_TIMEZONE           = 'UTC'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT    = 300   # 5 minutes max per task
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -145,13 +157,3 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# ── Celery ──────────────────────────────────────────────
-CELERY_BROKER_URL         = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND     = 'redis://127.0.0.1:6379/0'
-CELERY_ACCEPT_CONTENT     = ['json']
-CELERY_TASK_SERIALIZER    = 'json'
-CELERY_RESULT_SERIALIZER  = 'json'
-CELERY_TIMEZONE           = 'Asia/Kolkata'
-CELERY_TASK_TRACK_STARTED = True
-
-INSTALLED_APPS += ['django_celery_results']
