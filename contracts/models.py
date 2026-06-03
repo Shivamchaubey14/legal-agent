@@ -25,6 +25,7 @@ class Contract(models.Model):
     page_count = models.IntegerField(default=0)
     raw_text   = models.TextField(blank=True)
     risk_score = models.CharField(max_length=20, choices=RISK_CHOICES, blank=True, null=True)
+    risk_score_value = models.IntegerField(default=0)  # 0-100 numeric score
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

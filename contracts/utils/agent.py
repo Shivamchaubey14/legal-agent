@@ -40,22 +40,28 @@ RISK_LEVELS = ['low', 'medium', 'high']
 
 # ── Contract start markers (to strip stamp paper garbage) ────
 CONTRACT_START_MARKERS = [
+    'TUS LEASE AGREEMENT',      # your OCR variant — most specific, check first
+    'THIS LEASE AGRERMENT',
+    'THIS LEASE AGREEMENT',
+    'LEASE AGREEMENT',
     'THIS Contract agreement',
     'This Contract agreement',
-    'this contract agreement',
     'THIS AGREEMENT',
     'This Agreement is made',
     'THIS DEED OF AGREEMENT',
     'This Deed of Agreement',
     'THIS DEED WITNESSETH',
-    'NOW THEREFORE',
-    'WITNESSETH',
     'THIS SERVICE AGREEMENT',
     'This Service Agreement',
     'EMPLOYMENT AGREEMENT',
     'Employment Agreement',
     'CONSULTANCY AGREEMENT',
     'Consultancy Agreement',
+    'NOW THEREFORE',
+    'WITNESSETH',
+    'A. WHEREAS',               # fallback — at least gets recitals
+    'WHEREAS the Lessor',
+    'WHEREAS the Parties',
 ]
 
 
@@ -112,14 +118,13 @@ def clean_ocr_text(text: str) -> str:
 
 # ── Strip stamp paper header ─────────────────────────────────
 def strip_stamp_paper_header(text: str) -> str:
-    """Strip garbage OCR header — real contract starts at known markers."""
     if not text:
         return text
 
     for marker in CONTRACT_START_MARKERS:
         idx = text.find(marker)
-        if idx > 300:
-            logger.info(f'Stripped {idx} chars of stamp paper header at marker: "{marker}"')
+        if idx > 100:          # ← lowered from 300 to 100
+            logger.info(f'Stripped {idx} chars at marker: "{marker}"')
             return text[idx:]
 
     return text

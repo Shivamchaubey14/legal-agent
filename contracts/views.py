@@ -430,9 +430,11 @@ class ContractAnalyzeAPIView(APIView):
         contract.save()
 
         try:
+            from .models          import ClauseFlag
+            from .serializers     import ClauseFlagSerializer
             from .utils.agent        import run_clause_detection_agent
             from .utils.clause_saver import save_clause_flags
-            from .serializers        import ClauseFlagSerializer
+            from .utils.risk_scorer  import apply_risk_score
 
             result = run_clause_detection_agent(contract.id, contract.raw_text)
 
@@ -445,25 +447,10 @@ class ContractAnalyzeAPIView(APIView):
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             saved = save_clause_flags(contract, result['flags'])
-            # Compute overall contract risk score
-            from .utils.agent import RISK_WEIGHTS
 
-            flags_qs = ClauseFlag.objects.filter(contract=contract)
-            total_weight = sum(RISK_WEIGHTS.get(f.risk_level, 1) for f in flags_qs)
-            count = flags_qs.count()
-
-            if count == 0:
-                contract.risk_score = 'low'
-            elif total_weight >= count * 2.5:
-                contract.risk_score = 'critical'
-            elif total_weight >= count * 2.0:
-                contract.risk_score = 'high'
-            elif total_weight >= count * 1.5:
-                contract.risk_score = 'medium'
-            else:
-                contract.risk_score = 'low'
-
-            contract.save()
+            # ── Day 11: compute and apply risk score ─────────
+            from .utils.risk_scorer import apply_risk_score
+            score_result = apply_risk_score(contract)  # sets status='done' and saves
 
             from .models import ClauseFlag
             flags = ClauseFlag.objects.filter(contract=contract)
@@ -471,6 +458,9 @@ class ContractAnalyzeAPIView(APIView):
             return Response({
                 'success':     True,
                 'total_flags': saved,
+                'risk_score':  score_result['label'],
+                'risk_value':  score_result['score'],
+                'breakdown':   score_result['breakdown'],
                 'flags':       ClauseFlagSerializer(flags, many=True).data,
             })
 
@@ -481,7 +471,7 @@ class ContractAnalyzeAPIView(APIView):
             return Response({
                 'success': False,
                 'error':   str(e),
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)           
             
 # ── API: Bulk Export ZIP ─────────────────────────────────────
 class BulkExportAPIView(APIView):

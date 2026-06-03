@@ -13,10 +13,6 @@ def process_contract(self, contract_id: int) -> dict:
       3. Analyze        → detect risky clauses with AI agent
       4. Score          → compute overall risk score
       5. Save           → persist everything to DB
-
-    This task is called after file upload so the HTTP
-    response returns immediately and processing happens
-    in the background.
     """
     from contracts.models import Contract
 
@@ -72,6 +68,7 @@ def process_contract(self, contract_id: int) -> dict:
         raise self.retry(exc=exc)
 
     # ── Step 3: Analyze ──────────────────────────────────────
+    agent_result = {'total_flags': 0}
     try:
         logger.info(f'[{contract_id}] Step 3: Running clause detection agent')
         from contracts.utils.agent        import run_clause_detection_agent
@@ -91,26 +88,25 @@ def process_contract(self, contract_id: int) -> dict:
         contract.save()
         raise self.retry(exc=exc)
 
-    # ── Step 4: Score ────────────────────────────────────────
+    # ── Step 4: Score — sets status='done' ───────────────────
     try:
         logger.info(f'[{contract_id}] Step 4: Computing risk score')
-        from contracts.utils.scorer import compute_risk_score
+        from contracts.utils.risk_scorer import apply_risk_score
 
-        score_result      = compute_risk_score(contract)
-        contract.risk_score = score_result['risk_score']
-        contract.save()
+        score_result = apply_risk_score(contract)  # saves risk_score, risk_score_value, status='done'
 
         logger.info(
-            f'[{contract_id}] Risk score: {score_result["risk_score"]} '
-            f'(numeric: {score_result["numeric_score"]})'
+            f'[{contract_id}] Risk score: {score_result["label"]} '
+            f'({score_result["score"]}/100) — '
+            f'{score_result["breakdown"]["high"]}H '
+            f'{score_result["breakdown"]["medium"]}M '
+            f'{score_result["breakdown"]["low"]}L'
         )
     except Exception as exc:
         logger.error(f'[{contract_id}] Scoring failed: {exc}')
-        # Don't retry for scoring — just mark done without score
-
-    # ── Done ─────────────────────────────────────────────────
-    contract.status = 'done'
-    contract.save()
+        # Don't retry for scoring — mark done without score
+        contract.status = 'done'
+        contract.save()
 
     logger.info(f'[{contract_id}] Pipeline complete.')
 
@@ -119,5 +115,5 @@ def process_contract(self, contract_id: int) -> dict:
         'contract_id': contract_id,
         'page_count':  contract.page_count,
         'risk_score':  contract.risk_score,
-        'flags':       agent_result.get('total_flags', 0),
+        'total_flags': agent_result.get('total_flags', 0),
     }
