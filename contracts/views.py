@@ -111,10 +111,53 @@ class ContractUploadAPIView(APIView):
             status    = 'processing',
         )
 
-        # ── Fire async Celery task ────────────────────────────
-        from .tasks import process_contract
-        process_contract.delay(contract.id)
-        logger.info(f'Contract {contract.id} queued for async processing')
+        # ── Trigger async Celery pipeline ────────────────────
+        try:
+            from .tasks import process_contract
+
+            process_contract.delay(contract.id)
+
+            logger.info(
+                f'Queued contract {contract.id} for async processing'
+            )
+
+        except Exception as e:
+
+            # If Redis/Celery is unavailable, fall back
+            logger.warning(
+                f'Celery unavailable, running sync: {e}'
+            )
+
+            try:
+                from .utils.pdf_parser import parse_contract_file
+                from .utils.embedder import embed_contract
+
+                result = parse_contract_file(file_path)
+
+                contract.raw_text = result['text']
+                contract.page_count = result['page_count']
+
+                if result.get('error'):
+                    contract.status = 'error'
+                    contract.save()
+
+                else:
+                    embed_contract(
+                        contract.id,
+                        result['text']
+                    )
+
+                    contract.status = 'done'
+                    contract.save()
+
+            except Exception as e2:
+
+                logger.error(
+                    f'Sync fallback failed: {e2}'
+                )
+
+                contract.status = 'error'
+                contract.save()
 
         return Response({
             'success':  True,
@@ -271,22 +314,125 @@ class ContractFlagsAPIView(APIView):
 
     def get(self, request, pk):
         from contracts.models import ClauseFlag
-        contract = get_object_or_404(Contract, pk=pk, user=request.user)
-        flags    = ClauseFlag.objects.filter(contract=contract)
 
-        data = [{
-            'id':          f.id,
-            'clause_type': f.clause_type,
-            'risk_level':  f.risk_level,
-            'clause_text': f.clause_text,
-            'reason':      f.reason,
-            'suggestion':  f.suggestion,
-        } for f in flags]
+        contract = get_object_or_404(
+            Contract,
+            pk=pk,
+            user=request.user
+        )
+
+        flags = ClauseFlag.objects.filter(contract=contract)
+
+        high_count = flags.filter(
+            risk_level__in=['high', 'critical']
+        ).count()
+
+        medium_count = flags.filter(
+            risk_level='medium'
+        ).count()
+
+        low_count = flags.filter(
+            risk_level='low'
+        ).count()
+
+        flag_data = []
+
+        for flag in flags:
+            flag_data.append({
+                'id': flag.id,
+                'clause_type': flag.clause_type,
+                'risk_level': flag.risk_level,
+                'clause_text': flag.clause_text,
+                'reason': flag.reason,
+                'suggestion': flag.suggestion,
+                'page_number': flag.page_number,
+                'start_char': flag.start_char,
+                'end_char': flag.end_char,
+                'created_at': flag.created_at,
+            })
 
         return Response({
-            'success':    True,
-            'contract_id': pk,
-            'risk_score': contract.risk_score,
-            'flags':      data,
-            'count':      len(data),
+            'success': True,
+
+            'contract': {
+                'id': contract.id,
+                'title': contract.title,
+                'status': contract.status,
+                'risk_score': contract.risk_score,
+                'page_count': contract.page_count,
+                'created_at': contract.created_at,
+            },
+
+            'summary': {
+                'total_flags': flags.count(),
+                'high_risk': high_count,
+                'medium_risk': medium_count,
+                'low_risk': low_count,
+            },
+
+            'flags': flag_data,
         })
+        
+class ContractReviewAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+
+        contract = get_object_or_404(
+            Contract,
+            pk=pk,
+            user=request.user
+        )
+
+        flags = contract.flags.all()
+
+        return Response({
+            'success': True,
+
+            'contract_id': contract.id,
+            'title': contract.title,
+            'status': contract.status,
+
+            'risk_score': contract.risk_score,
+
+            'page_count': contract.page_count,
+
+            'raw_text': contract.raw_text,
+
+            'flags': [
+                {
+                    'id': f.id,
+                    'type': f.clause_type,
+                    'risk': f.risk_level,
+                    'text': f.clause_text,
+                    'reason': f.reason,
+                    'suggestion': f.suggestion,
+                    'page_number': f.page_number,
+                }
+                for f in flags
+            ]
+        })
+        
+@login_required
+def contract_review_page(request, pk):
+    from .models import ClauseFlag
+    
+    contract = get_object_or_404(Contract, pk=pk, user=request.user)
+    flags = ClauseFlag.objects.filter(contract=contract)
+    
+    # Convert flags to a list of dicts for template
+    flags_data = []
+    for flag in flags:
+        flags_data.append({
+            'type': flag.clause_type,
+            'risk': flag.risk_level,
+            'text': flag.clause_text,
+            'reason': flag.reason,
+            'suggestion': flag.suggestion,
+            'page_number': flag.page_number,
+        })
+    
+    return render(request, 'contract_review.html', {
+        'contract': contract,
+        'flags': flags_data,
+    })
