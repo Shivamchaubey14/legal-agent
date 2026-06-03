@@ -36,20 +36,21 @@ class Contract(models.Model):
     
     
 class ClauseFlag(models.Model):
-    RISK_LEVELS = [
-        ('low',      'Low'),
-        ('medium',   'Medium'),
-        ('high',     'High'),
-        ('critical', 'Critical'),
+
+    RISK_CHOICES = [
+        ('low',    'Low'),
+        ('medium', 'Medium'),
+        ('high',   'High'),
     ]
 
-    contract    = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='flags')
+    redline = models.TextField(blank=True, default='')
+    contract    = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='clause_flags')
     clause_type = models.CharField(max_length=100)
     clause_text = models.TextField()
-    risk_level  = models.CharField(max_length=20, choices=RISK_LEVELS)
+    risk_level  = models.CharField(max_length=20, choices=RISK_CHOICES, default='medium')
     reason      = models.TextField()
     suggestion  = models.TextField()
-    page_number = models.IntegerField(default=0)
+    page_number = models.IntegerField(default=1)
     start_char  = models.IntegerField(default=0)
     end_char    = models.IntegerField(default=0)
     created_at  = models.DateTimeField(auto_now_add=True)
@@ -58,4 +59,4 @@ class ClauseFlag(models.Model):
         ordering = ['-risk_level', 'clause_type']
 
     def __str__(self):
-        return f'{self.contract.title} — {self.clause_type} [{self.risk_level}]'
+        return f'{self.clause_type} ({self.risk_level}) — Contract {self.contract_id}'

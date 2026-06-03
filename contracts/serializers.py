@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Contract
+from .models import Contract, ClauseFlag
 
 
 class ContractSerializer(serializers.ModelSerializer):
@@ -27,3 +27,12 @@ class ContractSerializer(serializers.ModelSerializer):
         if days < 30:
             return f"{days}d ago"
         return obj.created_at.strftime("%b %d, %Y")
+    
+
+class ClauseFlagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = ClauseFlag   
+        fields = [
+    'id', 'clause_type', 'clause_text', 'risk_level',
+    'reason', 'suggestion', 'redline', 'page_number', 'created_at',
+]
