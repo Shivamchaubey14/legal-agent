@@ -1,235 +1,409 @@
-import dotenv
-from langchain_groq import ChatGroq
-dotenv.load_dotenv()  # Load environment variables from .env file
 import os
+import re
 import json
 import logging
 from typing import TypedDict, Annotated
 import operator
 
+from openai import OpenAI
 from langgraph.graph import StateGraph, END
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
+from langgraph.prebuilt import ToolNode
 
-from contracts.utils.embedder import query_contract, query_playbooks
+from .embedder import query_contract, query_playbooks
 
 logger = logging.getLogger(__name__)
 
-# ── Anthropic client ─────────────────────────────────────────
-def get_llm():
-    return ChatGroq(
-        model='llama-3.3-70b-versatile',
-        api_key=os.environ.get('GROQ_API_KEY'),
-        max_tokens=1024,
-    )
+# ── Grok client ──────────────────────────────────────────────
+client = OpenAI(
+    api_key=os.getenv('GROQ_API_KEY', ''),
+    base_url="https://api.groq.com/openai/v1",  # ← Groq not xAI
+)
 
+# ── Clause types we detect ───────────────────────────────────
+CLAUSE_TYPES = [
+    'Termination',
+    'Liability',
+    'Indemnification',
+    'Intellectual Property',
+    'Payment',
+    'Confidentiality',
+    'Governing Law',
+    'Non-Compete',
+    'Non-Solicitation',
+    'Data Privacy',
+    'Auto-Renewal',
+    'Service Level Agreement',
+]
 
-# ── Agent state ──────────────────────────────────────────────
-class AgentState(TypedDict):
-    contract_id:  int
-    contract_text: str
-    flags:        Annotated[list, operator.add]
-    chunks_done:  int
-    total_chunks: int
+# ── Risk levels ───────────────────────────────────────────────
+RISK_LEVELS = ['low', 'medium', 'high']
 
-
-# ── Clause types to detect ───────────────────────────────────
-CLAUSE_QUERIES = [
-    ('termination',           'termination notice period cure breach'),
-    ('liability',             'limitation of liability cap consequential damages'),
-    ('confidentiality',       'confidentiality nda non-disclosure obligation'),
-    ('ip',                    'intellectual property ownership rights assignment'),
-    ('payment',               'payment terms invoice due date late fees'),
-    ('non-compete',           'non-compete non-solicitation restriction'),
-    ('governing_law',         'governing law jurisdiction dispute resolution'),
-    ('indemnification',       'indemnification hold harmless defend claims'),
-    ('data_privacy',          'data privacy breach notification personal data'),
-    ('auto_renewal',          'automatic renewal cancellation notice'),
+# ── Contract start markers (to strip stamp paper garbage) ────
+CONTRACT_START_MARKERS = [
+    'THIS Contract agreement',
+    'This Contract agreement',
+    'this contract agreement',
+    'THIS AGREEMENT',
+    'This Agreement is made',
+    'THIS DEED OF AGREEMENT',
+    'This Deed of Agreement',
+    'THIS DEED WITNESSETH',
+    'NOW THEREFORE',
+    'WITNESSETH',
+    'THIS SERVICE AGREEMENT',
+    'This Service Agreement',
+    'EMPLOYMENT AGREEMENT',
+    'Employment Agreement',
+    'CONSULTANCY AGREEMENT',
+    'Consultancy Agreement',
 ]
 
 
-# ── Node 1: Search contract for each clause type ─────────────
-def search_node(state: AgentState) -> AgentState:
-    contract_id = state['contract_id']
-    all_flags   = []
+# ── Agent state ───────────────────────────────────────────────
+class AgentState(TypedDict):
+    contract_id:   int
+    contract_text: str
+    clause_flags:  list
+    current_chunk: str
+    messages:      list
+    done:          bool
 
-    llm = get_llm()
 
-    for clause_type, query in CLAUSE_QUERIES:
-        try:
-            # Search contract chunks
-            contract_chunks = query_contract(contract_id, query, top_k=3)
-            if not contract_chunks:
-                logger.info(f'No chunks found for {clause_type}')
-                continue
+# ── Tool: search contract ────────────────────────────────────
+def search_contract_tool(contract_id: int, query: str) -> list:
+    """Search within a contract for relevant clauses."""
+    results = query_contract(contract_id, query, top_k=3)
+    return results
 
-            contract_text = '\n\n'.join(
-                c.get('text', c) if isinstance(c, dict) else c
-                for c in contract_chunks
-            )
 
-            # Search playbook for standard clause
-            playbook_chunks = query_playbooks(query, top_k=2)
-            playbook_text = '\n\n'.join(
-                c.get('text', c) if isinstance(c, dict) else c
-                for c in playbook_chunks
-            ) if playbook_chunks else 'No standard playbook found for this clause type.'
+# ── Tool: search playbook ────────────────────────────────────
+def search_playbook_tool(query: str) -> list:
+    """Search legal playbooks for standard clause language."""
+    results = query_playbooks(query, top_k=3)
+    return results
 
-            # Ask Claude to analyze
-            system_prompt = """You are a legal contract review expert. 
-Analyze the contract clause against the standard playbook clause.
-Respond ONLY with a valid JSON object. No explanation, no markdown, no code blocks.
-The JSON must have exactly these keys:
-{
-  "has_issue": true or false,
-  "clause_type": "string",
-  "risk_level": "low" or "medium" or "high" or "critical",
-  "clause_text": "the exact problematic text from the contract (max 500 chars)",
-  "reason": "why this is risky (1-2 sentences)",
-  "suggestion": "specific recommended fix (1-2 sentences)"
-}
-If no issue found, return: {"has_issue": false}"""
 
-            user_prompt = f"""CLAUSE TYPE: {clause_type}
+# ── Clean OCR garbage lines ──────────────────────────────────
+def clean_ocr_text(text: str) -> str:
+    """Remove lines that are mostly non-alphanumeric (OCR garbage)."""
+    if not text:
+        return text
 
-CONTRACT TEXT:
-{contract_text[:2000]}
+    lines         = text.split('\n')
+    cleaned_lines = []
 
-STANDARD PLAYBOOK:
-{playbook_text[:1500]}
-
-Analyze the contract text against the playbook standard. 
-Is there a risk or deviation? Respond with JSON only."""
-
-            response = llm.invoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_prompt),
-            ])
-
-            raw = response.content.strip()
-
-            # Strip markdown if Claude wrapped it anyway
-            # Find the first { and last } to extract clean JSON
-            start = raw.find('{')
-            end   = raw.rfind('}') + 1
-            if start != -1 and end > start:
-                raw = raw[start:end]
-
-            result = json.loads(raw)
-
-            if result.get('has_issue'):
-                all_flags.append({
-                    'clause_type': result.get('clause_type', clause_type),
-                    'risk_level':  result.get('risk_level', 'medium'),
-                    'clause_text': result.get('clause_text', '')[:1000],
-                    'reason':      result.get('reason', ''),
-                    'suggestion':  result.get('suggestion', ''),
-                })
-                logger.info(f'Flag found: {clause_type} → {result.get("risk_level")}')
-            else:
-                logger.info(f'No issue: {clause_type}')
-
-        except json.JSONDecodeError as e:
-            logger.error(f'JSON parse error for {clause_type}: {e} | raw: {raw[:200]}')
-        except Exception as e:
-            logger.error(f'Agent error for {clause_type}: {e}')
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            cleaned_lines.append('')
             continue
 
-    return {'flags': all_flags, 'chunks_done': len(CLAUSE_QUERIES)}
+        alpha_count = sum(1 for c in stripped if c.isalnum() or c in ' .,;:()\'-"/')
+        ratio       = alpha_count / len(stripped) if stripped else 0
+
+        if ratio >= 0.40:
+            cleaned_lines.append(line)
+
+    text = '\n'.join(cleaned_lines)
+    text = re.sub(r'\n{4,}', '\n\n\n', text)
+    text = re.sub(r'[ \t]{3,}', ' ', text)
+    return text.strip()
 
 
-# ── Node 2: Save flags to DB and compute risk score ──────────
-def save_node(state: AgentState) -> AgentState:
-    from contracts.models import Contract, ClauseFlag
+# ── Strip stamp paper header ─────────────────────────────────
+def strip_stamp_paper_header(text: str) -> str:
+    """Strip garbage OCR header — real contract starts at known markers."""
+    if not text:
+        return text
 
-    contract_id = state['contract_id']
-    flags       = state['flags']
+    for marker in CONTRACT_START_MARKERS:
+        idx = text.find(marker)
+        if idx > 300:
+            logger.info(f'Stripped {idx} chars of stamp paper header at marker: "{marker}"')
+            return text[idx:]
+
+    return text
+
+
+# ── Core analysis function ───────────────────────────────────
+def analyze_chunk(contract_id: int, chunk: str, chunk_index: int) -> list:
+    """
+    Send a contract chunk to Grok for clause detection.
+    Returns list of detected clause flags.
+    """
+
+    system_prompt = """You are a legal contract analysis expert. 
+Your job is to analyze contract text and identify risky clauses.
+
+For each risky clause you find, return a JSON object with:
+- clause_type: one of [Termination, Liability, Indemnification, Intellectual Property, 
+  Payment, Confidentiality, Governing Law, Non-Compete, Non-Solicitation, 
+  Data Privacy, Auto-Renewal, Service Level Agreement]
+- clause_text: the exact problematic text (max 300 chars)
+- risk_level: low, medium, or high
+- reason: why this clause is risky (1-2 sentences)
+- suggestion: how to improve it (1-2 sentences)
+- page_number: estimate based on position (use 1 if unknown)
+
+Return ONLY a valid JSON array. If no risky clauses found, return [].
+Do not include any explanation outside the JSON."""
+
+    user_prompt = f"""Analyze this contract section for risky clauses:
+
+{chunk}
+
+Return a JSON array of flagged clauses."""
 
     try:
-        contract = Contract.objects.get(id=contract_id)
-    except Contract.DoesNotExist:
-        logger.error(f'Contract {contract_id} not found in save_node')
-        return state
-
-    # Delete old flags for this contract
-    ClauseFlag.objects.filter(contract=contract).delete()
-
-    # Save new flags
-    for flag in flags:
-        ClauseFlag.objects.create(
-            contract    = contract,
-            clause_type = flag['clause_type'],
-            risk_level  = flag['risk_level'],
-            clause_text = flag['clause_text'],
-            reason      = flag['reason'],
-            suggestion  = flag['suggestion'],
+        response = client.chat.completions.create(
+            model = 'llama-3.3-70b-versatile',   # best free Groq model
+            max_tokens = 2000,
+            messages   = [
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user',   'content': user_prompt},
+            ],
         )
 
-    # ── Compute overall risk score ────────────────────────────
-    # Weights: critical=4, high=3, medium=2, low=1
-    weights    = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1}
-    score      = sum(weights.get(f['risk_level'], 1) for f in flags)
-    max_score  = len(CLAUSE_QUERIES) * 4   # if every clause were critical
+        raw = response.choices[0].message.content.strip()
 
-    if score == 0:
-        risk_score = 'low'
-    elif score <= max_score * 0.25:
-        risk_score = 'low'
-    elif score <= max_score * 0.50:
-        risk_score = 'medium'
-    elif score <= max_score * 0.75:
-        risk_score = 'high'
-    else:
-        risk_score = 'critical'
+        # Debug — visible in Django server terminal
+        print(f"\nDEBUG GROK chunk {chunk_index}:\n{raw[:500]}\n")
 
-    contract.risk_score = risk_score
-    contract.status     = 'done'
-    contract.save(update_fields=['risk_score', 'status'])
+        # Clean up response — strip markdown code blocks if present
+        if raw.startswith('```'):
+            raw = raw.split('```')[1]
+            if raw.startswith('json'):
+                raw = raw[4:]
+        raw = raw.strip()
 
-    logger.info(
-        f'Contract {contract_id} analysis done — '
-        f'{len(flags)} flags, risk_score={risk_score}'
+        flags = json.loads(raw)
+        if not isinstance(flags, list):
+            flags = []
+
+        # Validate and normalize each flag
+        validated = []
+        for flag in flags:
+            if not isinstance(flag, dict):
+                continue
+            validated.append({
+                'clause_type':  str(flag.get('clause_type',  'General')),
+                'clause_text':  str(flag.get('clause_text',  ''))[:500],
+                'risk_level':   str(flag.get('risk_level',   'medium')).lower(),
+                'reason':       str(flag.get('reason',       '')),
+                'suggestion':   str(flag.get('suggestion',   '')),
+                'page_number':  int(flag.get('page_number',  1)),
+                'chunk_index':  chunk_index,
+            })
+
+        logger.info(f'Chunk {chunk_index}: found {len(validated)} flags')
+        return validated
+
+    except json.JSONDecodeError as e:
+        logger.error(f'JSON parse error on chunk {chunk_index}: {e}')
+        print(f"DEBUG JSON ERROR chunk {chunk_index}: {e}\nRaw was: {raw[:300]}")
+        return []
+    except Exception as e:
+        logger.error(f'Grok API error on chunk {chunk_index}: {e}')
+        return []
+
+
+# ── Playbook comparison ──────────────────────────────────────
+def compare_with_playbook(clause_type: str, clause_text: str) -> str:
+    """
+    Compare a flagged clause against the playbook standard.
+    Returns enhanced suggestion grounded in playbook.
+    """
+    playbook_results = search_playbook_tool(
+        f'{clause_type} clause risk: {clause_text[:100]}'
     )
-    return state
 
+    if not playbook_results:
+        return ''
 
-# ── Build the LangGraph ──────────────────────────────────────
-def build_agent():
-    graph = StateGraph(AgentState)
+    playbook_context = '\n\n'.join([r['text'][:400] for r in playbook_results[:2]])
 
-    graph.add_node('search', search_node)
-    graph.add_node('save',   save_node)
+    prompt = f"""You are a legal expert. Compare this contract clause against the standard playbook.
 
-    graph.set_entry_point('search')
-    graph.add_edge('search', 'save')
-    graph.add_edge('save',   END)
+CONTRACT CLAUSE ({clause_type}):
+{clause_text[:300]}
 
-    return graph.compile()
+STANDARD PLAYBOOK:
+{playbook_context}
 
-
-# ── Public entry point ───────────────────────────────────────
-def analyze_contract(contract_id: int) -> dict:
-    """
-    Run the full clause detection agent on a contract.
-    Called from Celery task in Day 8.
-    """
-    agent = build_agent()
-
-    initial_state = {
-        'contract_id':   contract_id,
-        'contract_text': '',
-        'flags':         [],
-        'chunks_done':   0,
-        'total_chunks':  len(CLAUSE_QUERIES),
-    }
+In 2 sentences, explain specifically what is missing or risky compared to the standard, 
+and what exact language should be added or changed. Be specific and actionable."""
 
     try:
-        final_state = agent.invoke(initial_state)
-        return {
-            'success':    True,
-            'flags_found': len(final_state['flags']),
-            'flags':      final_state['flags'],
-        }
+        response = client.chat.completions.create(
+            model = 'llama-3.3-70b-versatile',   # best free Groq model
+            max_tokens = 300,
+            messages   = [{'role': 'user', 'content': prompt}],
+        )
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        logger.error(f'Agent failed for contract {contract_id}: {e}')
-        return {'success': False, 'error': str(e)}
+        logger.error(f'Playbook comparison error: {e}')
+        return ''
+    
+# ── Risk scoring ──────────────────────────────────────────────
+RISK_WEIGHTS = {
+    'high':   3,
+    'medium': 2,
+    'low':    1,
+}
+
+def score_clause_risk(clause_type: str, clause_text: str, current_risk: str) -> str:
+    """
+    Re-evaluate and confirm/upgrade the risk level using a dedicated scoring call.
+    Returns a validated risk level: 'low', 'medium', or 'high'.
+    """
+    prompt = f"""You are a senior legal risk analyst. Score the risk level of this clause.
+
+CLAUSE TYPE: {clause_type}
+CLAUSE TEXT: {clause_text[:300]}
+
+Score as one of: low, medium, high
+
+Criteria:
+- high: clause is one-sided, waives critical rights, unlimited liability, immediate termination without notice, unfair IP assignment
+- medium: clause is imbalanced but negotiable, short payment windows, vague scope, weak confidentiality
+- low: clause is standard with minor concerns, common boilerplate, short notice periods
+
+Respond with ONLY one word: low, medium, or high"""
+
+    try:
+        response = client.chat.completions.create(
+            model='llama-3.3-70b-versatile',
+            max_tokens=10,
+            messages=[{'role': 'user', 'content': prompt}],
+        )
+        score = response.choices[0].message.content.strip().lower()
+        if score not in ('low', 'medium', 'high'):
+            return current_risk
+        return score
+    except Exception as e:
+        logger.error(f'Risk scoring error: {e}')
+        return current_risk
+
+
+# ── Redline suggestion generator ─────────────────────────────
+def generate_redline(clause_type: str, clause_text: str) -> str:
+    """
+    Generate a specific redlined (rewritten) alternative for a risky clause.
+    Returns suggested replacement language.
+    """
+    prompt = f"""You are a contract lawyer. Rewrite this risky clause with balanced, standard language.
+
+CLAUSE TYPE: {clause_type}
+ORIGINAL TEXT: {clause_text[:300]}
+
+Write ONLY the improved clause text (2-4 sentences). 
+Make it balanced and fair to both parties. 
+Start directly with the clause language — no preamble."""
+
+    try:
+        response = client.chat.completions.create(
+            model='llama-3.3-70b-versatile',
+            max_tokens=250,
+            messages=[{'role': 'user', 'content': prompt}],
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f'Redline generation error: {e}')
+        return ''
+
+
+# ── Main agent function ──────────────────────────────────────
+def run_clause_detection_agent(contract_id: int, raw_text: str) -> dict:
+    """
+    Main entry point. Analyzes a full contract and returns all flags.
+
+    Returns:
+        {
+            'success':     bool,
+            'flags':       list of clause flags,
+            'total_flags': int,
+            'error':       str | None
+        }
+    """
+    if not raw_text or not raw_text.strip():
+        return {
+            'success':     False,
+            'flags':       [],
+            'total_flags': 0,
+            'error':       'No contract text to analyze',
+        }
+
+    logger.info(f'Starting clause detection for contract {contract_id}')
+
+    # ── Step 1: Clean OCR garbage lines ─────────────────────
+    clean_text = clean_ocr_text(raw_text)
+
+    # ── Step 2: Strip stamp paper header ────────────────────
+    clean_text = strip_stamp_paper_header(clean_text)
+
+    # ── Debug: confirm clean text ────────────────────────────
+    print(f"\nDEBUG: Clean text length: {len(clean_text)}")
+    print(f"DEBUG: Clean text preview:\n{clean_text[:400]}\n")
+
+    if not clean_text.strip():
+        return {
+            'success':     False,
+            'flags':       [],
+            'total_flags': 0,
+            'error':       'Contract text is empty after cleaning',
+        }
+
+    # ── Step 3: Split into chunks for analysis ───────────────
+    from .embedder import chunk_text
+    chunks    = chunk_text(clean_text, chunk_size=600, overlap=60)
+    all_flags = []
+    seen_texts = set()  # deduplicate similar flags
+
+    print(f"DEBUG: Total chunks to analyze: {len(chunks)}")
+
+    for i, chunk in enumerate(chunks):
+        logger.info(f'Analyzing chunk {i+1}/{len(chunks)}')
+        flags = analyze_chunk(contract_id, chunk, i)
+
+        for flag in flags:
+            key = f"{flag['clause_type']}:{flag['clause_text'][:80]}"
+            if key in seen_texts:
+                continue
+            seen_texts.add(key)
+
+            # ── Day 10 additions ─────────────────────────────
+
+            # 1. Re-score risk level with dedicated scorer
+            flag['risk_level'] = score_clause_risk(
+                flag['clause_type'],
+                flag['clause_text'],
+                flag['risk_level'],
+            )
+
+            # 2. Generate redline suggestion
+            redline = generate_redline(flag['clause_type'], flag['clause_text'])
+            if redline:
+                flag['redline'] = redline
+
+            # 3. Enhance suggestion with playbook comparison (existing)
+            if flag['clause_type'] and flag['clause_text']:
+                enhanced = compare_with_playbook(
+                    flag['clause_type'],
+                    flag['clause_text'],
+                )
+                if enhanced:
+                    flag['suggestion'] = enhanced
+
+            all_flags.append(flag)
+
+    logger.info(
+        f'Contract {contract_id} analysis complete: '
+        f'{len(all_flags)} flags across {len(chunks)} chunks'
+    )
+
+    return {
+        'success':     True,
+        'flags':       all_flags,
+        'total_flags': len(all_flags),
+        'error':       None,
+    }
