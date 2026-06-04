@@ -161,7 +161,7 @@ Return a JSON array of flagged clauses."""
 
     try:
         response = client.chat.completions.create(
-            model = 'llama-3.3-70b-versatile',   # best free Groq model
+            model="llama-3.1-8b-instant",   # best free Groq model
             max_tokens = 2000,
             messages   = [
                 {'role': 'system', 'content': system_prompt},
@@ -240,7 +240,7 @@ and what exact language should be added or changed. Be specific and actionable."
 
     try:
         response = client.chat.completions.create(
-            model = 'llama-3.3-70b-versatile',   # best free Groq model
+            model="llama-3.1-8b-instant",   # best free Groq model
             max_tokens = 300,
             messages   = [{'role': 'user', 'content': prompt}],
         )
@@ -277,7 +277,7 @@ Respond with ONLY one word: low, medium, or high"""
 
     try:
         response = client.chat.completions.create(
-            model='llama-3.3-70b-versatile',
+            model="llama-3.1-8b-instant",
             max_tokens=10,
             messages=[{'role': 'user', 'content': prompt}],
         )
@@ -307,7 +307,7 @@ Start directly with the clause language — no preamble."""
 
     try:
         response = client.chat.completions.create(
-            model='llama-3.3-70b-versatile',
+            model="llama-3.1-8b-instant",
             max_tokens=250,
             messages=[{'role': 'user', 'content': prompt}],
         )

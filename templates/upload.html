@@ -742,7 +742,7 @@
           setProgress(100, 'Upload complete!');
           progressLbl.style.color = 'var(--low)';
           uploadBtn.innerHTML = '<i class="ti ti-check"></i> Uploaded! Redirecting…';
-          setTimeout(() => { window.location.href = data.redirect || '/dashboard/'; }, 800);
+          setTimeout(() => { window.location.href = data.redirect || `/contracts/${data.contract.id}/processing/`; }, 800);
         } else { showError(data.error || 'Upload failed.'); resetBtn(); }
       } catch { showError('Unexpected server response.'); resetBtn(); }
     });

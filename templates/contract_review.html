@@ -558,7 +558,239 @@
     font-size: 10px; font-weight: 700;
     color: var(--txt3); font-family: 'DM Mono', monospace;
     margin-left: 4px;
-  } 
+  }
+  /* ── Chat FAB button ── */
+  .chat-fab {
+    position: fixed;
+    bottom: 32px; right: 32px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #000;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+    transition: all 0.2s;
+    z-index: 1000;
+  }
+  .chat-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(201,168,76,0.5); }
+  .chat-fab .fab-badge {
+    position: absolute; top: -4px; right: -4px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--high); color: #fff;
+    font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    border: 2px solid var(--bg);
+  }
+
+  /* ── Chat drawer ── */
+  .chat-drawer {
+    position: fixed;
+    top: 0; right: -440px;
+    width: 420px; height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 1100;
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -8px 0 32px rgba(0,0,0,0.2);
+  }
+  .chat-drawer.open { right: 0; }
+
+  /* Backdrop */
+  .chat-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1050;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .chat-backdrop.show { opacity: 1; pointer-events: all; }
+
+  /* Drawer header */
+  .chat-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+  .chat-drawer-title {
+    font-size: 14px; font-weight: 600; color: var(--txt);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .chat-drawer-title i { color: var(--gold); }
+  .chat-drawer-title small {
+    font-size: 10px; color: var(--txt4);
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .chat-close-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface3);
+    color: var(--txt3); cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .chat-close-btn:hover { border-color: var(--high); color: var(--high); }
+
+  /* Starter questions */
+  .chat-starters {
+    padding: 16px 16px 8px;
+    display: flex; flex-wrap: wrap; gap: 6px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .chat-starters-label {
+    width: 100%; font-size: 10px; font-weight: 700;
+    color: var(--txt4); letter-spacing: 0.08em; text-transform: uppercase;
+    font-family: 'DM Mono', monospace; margin-bottom: 4px;
+  }
+  .starter-chip {
+    padding: 4px 10px; border-radius: 99px; font-size: 11px;
+    border: 1px solid var(--border2); background: var(--surface2);
+    color: var(--txt3); cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
+  }
+  .starter-chip:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+  /* Messages area */
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 14px;
+    scroll-behavior: smooth;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+  /* Individual message bubbles */
+  .chat-msg {
+    display: flex; gap: 8px; align-items: flex-end;
+    animation: msg-in 0.2s ease;
+  }
+  @keyframes msg-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .chat-msg.user { flex-direction: row-reverse; }
+
+  .chat-avatar {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .chat-msg.user     .chat-avatar { background: var(--gold-dim); color: var(--gold); }
+  .chat-msg.assistant .chat-avatar { background: var(--surface3); color: var(--txt3); }
+
+  .chat-bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    word-break: break-word;
+  }
+  .chat-msg.user      .chat-bubble { background: var(--gold); color: #000; border-bottom-right-radius: 4px; }
+  .chat-msg.assistant .chat-bubble { background: var(--surface2); color: var(--txt2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+
+  .chat-bubble-time {
+    font-size: 9px; color: var(--txt4); margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+    display: block; text-align: right;
+  }
+  .chat-msg.user .chat-bubble-time { text-align: left; }
+
+  /* Citation chips */
+  .citation-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .citation-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 99px;
+    font-size: 10px; font-weight: 600;
+    background: var(--gold-dim); color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.25);
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
+  }
+  .citation-chip:hover { background: rgba(201,168,76,0.2); }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex; gap: 8px; align-items: flex-end;
+  }
+  .typing-bubble {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; border-bottom-left-radius: 4px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .typing-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--txt4);
+    animation: typing-bounce 1.2s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing-bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  /* Empty state */
+  .chat-empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px; text-align: center; padding: 32px;
+    color: var(--txt4);
+  }
+  .chat-empty i { font-size: 36px; color: var(--gold); opacity: 0.5; }
+  .chat-empty p { font-size: 12px; line-height: 1.6; }
+
+  /* Input area */
+  .chat-input-area {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+  .chat-input-row {
+    display: flex; gap: 8px; align-items: flex-end;
+  }
+  .chat-textarea {
+    flex: 1; resize: none; min-height: 40px; max-height: 120px;
+    background: var(--surface3); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 10px 14px;
+    font-size: 13px; color: var(--txt); font-family: 'Geist', sans-serif;
+    line-height: 1.5; outline: none; transition: border-color 0.2s;
+    scrollbar-width: none;
+  }
+  .chat-textarea:focus { border-color: rgba(201,168,76,0.4); }
+  .chat-textarea::placeholder { color: var(--txt4); }
+  .chat-send-btn {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    background: var(--gold); border: none; cursor: pointer;
+    color: #000; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .chat-send-btn:hover { background: var(--gold-light); transform: scale(1.05); }
+  .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .chat-footer-hint {
+    font-size: 10px; color: var(--txt4); text-align: center;
+    margin-top: 8px; font-family: 'DM Mono', monospace;
+  }
+  .chat-clear-btn {
+    font-size: 10px; color: var(--txt4); background: none; border: none;
+    cursor: pointer; padding: 0; transition: color 0.15s;
+    font-family: 'DM Mono', monospace;
+  }
+  .chat-clear-btn:hover { color: var(--high); }
+
+  /* Mobile full-screen */
+  @media (max-width: 480px) {
+    .chat-drawer { width: 100%; right: -100%; }
+    .chat-fab { bottom: 20px; right: 20px; }
+  }
 </style>
 {% endblock %}
 
@@ -754,6 +986,73 @@
       {% endif %}
     </div>
   </div>
+</div><!-- /review-container -->
+</div>
+
+<!-- ── Chat backdrop ── -->
+<div class="chat-backdrop" id="chat-backdrop" onclick="closeChat()"></div>
+
+<!-- ── Chat FAB ── -->
+<button class="chat-fab" id="chat-fab" onclick="openChat()" title="Ask AI about this contract">
+  <i class="ti ti-message-2"></i>
+</button>
+
+<!-- ── Chat Drawer ── -->
+<div class="chat-drawer" id="chat-drawer">
+
+  <div class="chat-drawer-header">
+    <div class="chat-drawer-title">
+      <i class="ti ti-sparkles"></i>
+      Ask AI
+      <small>{{ contract.title }}</small>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="chat-clear-btn" onclick="clearChat()" title="Clear history">
+        <i class="ti ti-trash"></i> Clear
+      </button>
+      <button class="chat-close-btn" onclick="closeChat()">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Starter questions -->
+  <div class="chat-starters" id="chat-starters">
+    <div class="chat-starters-label">Suggested questions</div>
+    <button class="starter-chip" onclick="sendStarter(this)">What are the termination conditions?</button>
+    <button class="starter-chip" onclick="sendStarter(this)">Are there any liability caps?</button>
+    <button class="starter-chip" onclick="sendStarter(this)">What are my payment obligations?</button>
+    <button class="starter-chip" onclick="sendStarter(this)">Summarise the key risks</button>
+    <button class="starter-chip" onclick="sendStarter(this)">Is there a non-compete clause?</button>
+    <button class="starter-chip" onclick="sendStarter(this)">What happens at renewal?</button>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-empty" id="chat-empty">
+      <i class="ti ti-message-bolt"></i>
+      <p>Ask anything about this contract.<br>I'll cite the exact clause.</p>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="chat-input-area">
+    <div class="chat-input-row">
+      <textarea
+        class="chat-textarea"
+        id="chat-input"
+        placeholder="Ask about a clause, risk, or term…"
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="chat-send-btn" id="chat-send" onclick="sendMessage()" disabled>
+        <i class="ti ti-send"></i>
+      </button>
+    </div>
+    <div class="chat-footer-hint">Enter to send · Shift+Enter for new line</div>
+  </div>
+
 </div>
 {% endblock %}
 
@@ -1139,6 +1438,290 @@
       btn.disabled = false;
       btn.innerHTML = '<i class="ti ti-refresh"></i> Re-analyze';
     }
+  }
+  // ════════════════════════════════════════════════
+  // CHAT PANEL — Day 16
+  // ════════════════════════════════════════════════
+
+  let chatOpen      = false;
+  let chatLoading   = false;
+  let messageCount  = 0;
+
+  function openChat() {
+    chatOpen = true;
+    document.getElementById('chat-drawer').classList.add('open');
+    document.getElementById('chat-backdrop').classList.add('show');
+    document.getElementById('chat-fab').style.display = 'none';
+    document.getElementById('chat-input').focus();
+    if (messageCount === 0) loadHistory();
+  }
+
+  function closeChat() {
+    chatOpen = false;
+    document.getElementById('chat-drawer').classList.remove('open');
+    document.getElementById('chat-backdrop').classList.remove('show');
+    document.getElementById('chat-fab').style.display = 'flex';
+  }
+
+  // ── Load existing history on open ─────────────────────────
+  async function loadHistory() {
+    try {
+      const res  = await fetch(`/api/contracts/${CONTRACT_ID}/chat/`, { credentials: 'same-origin' });
+      const data = await res.json();
+      if (data.success && data.history.length) {
+        document.getElementById('chat-empty').style.display = 'none';
+        document.getElementById('chat-starters').style.display = 'none';
+        data.history.forEach(m => appendMessage(m.role, m.content, m.citations || []));
+      }
+    } catch(e) { console.warn('History load failed:', e); }
+  }
+
+  // ── Append a message bubble ────────────────────────────────
+  function appendMessage(role, content, citations = []) {
+    const container = document.getElementById('chat-messages');
+    document.getElementById('chat-empty').style.display = 'none';
+
+    const wrap = document.createElement('div');
+    wrap.className = `chat-msg ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'chat-avatar';
+    avatar.innerHTML = role === 'user'
+      ? '<i class="ti ti-user"></i>'
+      : '<i class="ti ti-robot"></i>';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+
+    // Format content — convert **bold** and newlines
+    const formatted = content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+    bubble.innerHTML = formatted;
+
+    // Citation chips
+    if (citations && citations.length) {
+      const chips = document.createElement('div');
+      chips.className = 'citation-chips';
+      citations.forEach(c => {
+        const chip = document.createElement('span');
+        chip.className = 'citation-chip';
+        chip.innerHTML = `<i class="ti ti-bookmark"></i> Chunk ${c.chunk_index}`;
+        chip.title = c.excerpt || '';
+        chip.onclick = () => highlightChunkInText(c.excerpt);
+        chips.appendChild(chip);
+      });
+      bubble.appendChild(chips);
+    }
+
+    const time = document.createElement('span');
+    time.className = 'chat-bubble-time';
+    time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    bubble.appendChild(time);
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+
+    messageCount++;
+
+    // Hide starters after first real message
+    if (messageCount >= 1) {
+      document.getElementById('chat-starters').style.display = 'none';
+    }
+
+    return bubble;
+  }
+
+  // ── Typewriter effect for assistant replies ────────────────
+  function typewriterBubble(bubble, text) {
+    const formatted = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+
+    bubble.innerHTML = '';
+    const temp = document.createElement('div');
+    temp.innerHTML = formatted;
+    const fullHTML = temp.innerHTML;
+
+    let i = 0;
+    const chars = fullHTML.split('');
+    const timer = setInterval(() => {
+      if (i >= chars.length) { clearInterval(timer); return; }
+      bubble.innerHTML = chars.slice(0, ++i).join('') + '<span class="ct-cursor"></span>';
+      const container = document.getElementById('chat-messages');
+      container.scrollTop = container.scrollHeight;
+    }, 8);
+
+    // Return a promise that resolves when typing is done
+    return new Promise(resolve => {
+      setTimeout(() => {
+        clearInterval(timer);
+        bubble.innerHTML = formatted;
+        resolve();
+      }, chars.length * 8 + 50);
+    });
+  }
+
+  // ── Show / remove typing indicator ────────────────────────
+  function showTyping() {
+    const container = document.getElementById('chat-messages');
+    const el = document.createElement('div');
+    el.className = 'typing-indicator';
+    el.id = 'typing-indicator';
+    el.innerHTML = `
+      <div class="chat-avatar" style="background:var(--surface3);color:var(--txt3);">
+        <i class="ti ti-robot"></i>
+      </div>
+      <div class="typing-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>`;
+    container.appendChild(el);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
+  }
+
+  // ── Send message ───────────────────────────────────────────
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text  = input.value.trim();
+    if (!text || chatLoading) return;
+
+    chatLoading = true;
+    input.value = '';
+    autoResize(input);
+    document.getElementById('chat-send').disabled = true;
+
+    appendMessage('user', text);
+    showTyping();
+
+    try {
+      const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+      const res  = await fetch(`/api/contracts/${CONTRACT_ID}/chat/`, {
+        method:      'POST',
+        credentials: 'same-origin',
+        headers:     { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+        body:        JSON.stringify({ message: text }),
+      });
+
+      const data = await res.json();
+      removeTyping();
+
+      if (data.success) {
+        // Create bubble first, then typewrite into it
+        const container = document.getElementById('chat-messages');
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-msg assistant';
+        wrap.innerHTML = `
+          <div class="chat-avatar"><i class="ti ti-robot"></i></div>
+          <div class="chat-bubble"></div>`;
+        container.appendChild(wrap);
+        const bubble = wrap.querySelector('.chat-bubble');
+
+        await typewriterBubble(bubble, data.answer);
+
+        // Add citations after typewriter finishes
+        if (data.citations && data.citations.length) {
+          const chips = document.createElement('div');
+          chips.className = 'citation-chips';
+          data.citations.forEach(c => {
+            const chip = document.createElement('span');
+            chip.className = 'citation-chip';
+            chip.innerHTML = `<i class="ti ti-bookmark"></i> Chunk ${c.chunk_index}`;
+            chip.title = c.excerpt || '';
+            chip.onclick = () => highlightChunkInText(c.excerpt);
+            chips.appendChild(chip);
+          });
+          bubble.appendChild(chips);
+        }
+
+        const time = document.createElement('span');
+        time.className = 'chat-bubble-time';
+        time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        bubble.appendChild(time);
+
+        container.scrollTop = container.scrollHeight;
+        messageCount++;
+
+      } else {
+        appendMessage('assistant', `Sorry, I ran into an error: ${data.error}`);
+      }
+
+    } catch(e) {
+      removeTyping();
+      appendMessage('assistant', 'Network error. Please try again.');
+    }
+
+    chatLoading = false;
+    document.getElementById('chat-send').disabled = false;
+    input.focus();
+  }
+
+  // ── Highlight cited excerpt in contract text ───────────────
+  function highlightChunkInText(excerpt) {
+    if (!excerpt) return;
+    const container = document.getElementById('contract-text');
+    const search    = excerpt.substring(0, 40).toLowerCase();
+    const walker    = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const idx  = node.textContent.toLowerCase().indexOf(search);
+      if (idx !== -1) {
+        container.querySelectorAll('.citation-highlight').forEach(el => el.classList.remove('citation-highlight'));
+        const span = document.createElement('span');
+        span.className = 'highlight-active citation-highlight';
+        const range = document.createRange();
+        range.setStart(node, idx);
+        range.setEnd(node, Math.min(idx + 80, node.textContent.length));
+        try { range.surroundContents(span); } catch(e) {}
+        span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        break;
+      }
+    }
+  }
+
+  // ── Starter chips ──────────────────────────────────────────
+  function sendStarter(btn) {
+    document.getElementById('chat-input').value = btn.textContent;
+    sendMessage();
+  }
+
+  // ── Clear history ──────────────────────────────────────────
+  async function clearChat() {
+    if (!confirm('Clear all chat history for this contract?')) return;
+    try {
+      const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+      await fetch(`/api/contracts/${CONTRACT_ID}/chat/`, {
+        method: 'DELETE', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': csrf },
+      });
+    } catch(e) {}
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = `
+      <div class="chat-empty" id="chat-empty">
+        <i class="ti ti-message-bolt"></i>
+        <p>Ask anything about this contract.<br>I'll cite the exact clause.</p>
+      </div>`;
+    document.getElementById('chat-starters').style.display = 'flex';
+    messageCount = 0;
+  }
+
+  // ── Keyboard + auto-resize ─────────────────────────────────
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    document.getElementById('chat-send').disabled = !el.value.trim();
   }
 
   // ── Init ──────────────────────────────────────────────────
