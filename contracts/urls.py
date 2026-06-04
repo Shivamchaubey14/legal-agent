@@ -55,6 +55,9 @@ urlpatterns = [
          views.ContractAnalyzeAPIView.as_view(), name='api_contract_analyze'),
     path('api/contracts/<int:pk>/chat/',
           views.ContractChatAPIView.as_view(), name='api_contract_chat'),
+    
+    path('api/contracts/<int:pk>/report/',
+          views.ContractReportAPIView.as_view(), name='api_contract_report'),
 
     path('api/embed/stats/',
          views.EmbedStatsAPIView.as_view(),      name='api_embed_stats'),
