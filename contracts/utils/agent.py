@@ -129,6 +129,27 @@ def strip_stamp_paper_header(text: str) -> str:
 
     return text
 
+def _call_with_retry(fn, max_retries: int = 3, backoff: float = 2.0):
+    """
+    Call fn() with exponential backoff on rate-limit or transient errors.
+    Raises the last exception if all retries fail.
+    """
+    import time
+    last_exc = None
+    for attempt in range(max_retries):
+        try:
+            return fn()
+        except Exception as e:
+            last_exc = e
+            err_str  = str(e).lower()
+            # Retry on rate limit or 5xx server errors
+            if any(k in err_str for k in ('rate limit', '429', '503', '502', 'timeout', 'connection')):
+                wait = backoff ** attempt
+                logger.warning(f'API error (attempt {attempt+1}/{max_retries}), retrying in {wait}s: {e}')
+                time.sleep(wait)
+            else:
+                raise   # Non-retryable error — fail immediately
+    raise last_exc
 
 # ── Core analysis function ───────────────────────────────────
 def analyze_chunk(contract_id: int, chunk: str, chunk_index: int) -> list:
@@ -160,14 +181,14 @@ Do not include any explanation outside the JSON."""
 Return a JSON array of flagged clauses."""
 
     try:
-        response = client.chat.completions.create(
+        response = _call_with_retry(lambda: client.chat.completions.create(
             model="llama-3.1-8b-instant",   # best free Groq model
             max_tokens = 2000,
             messages   = [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user',   'content': user_prompt},
             ],
-        )
+        ))
 
         raw = response.choices[0].message.content.strip()
 
@@ -239,11 +260,11 @@ In 2 sentences, explain specifically what is missing or risky compared to the st
 and what exact language should be added or changed. Be specific and actionable."""
 
     try:
-        response = client.chat.completions.create(
+        response = _call_with_retry(lambda: client.chat.completions.create(
             model="llama-3.1-8b-instant",   # best free Groq model
             max_tokens = 300,
             messages   = [{'role': 'user', 'content': prompt}],
-        )
+        ))
         return response.choices[0].message.content.strip()
     except Exception as e:
         logger.error(f'Playbook comparison error: {e}')
@@ -276,11 +297,11 @@ Criteria:
 Respond with ONLY one word: low, medium, or high"""
 
     try:
-        response = client.chat.completions.create(
+        response = _call_with_retry(lambda: client.chat.completions.create(
             model="llama-3.1-8b-instant",
             max_tokens=10,
             messages=[{'role': 'user', 'content': prompt}],
-        )
+        ))
         score = response.choices[0].message.content.strip().lower()
         if score not in ('low', 'medium', 'high'):
             return current_risk
@@ -306,11 +327,11 @@ Make it balanced and fair to both parties.
 Start directly with the clause language — no preamble."""
 
     try:
-        response = client.chat.completions.create(
+        response = _call_with_retry(lambda: client.chat.completions.create(
             model="llama-3.1-8b-instant",
             max_tokens=250,
             messages=[{'role': 'user', 'content': prompt}],
-        )
+        ))
         return response.choices[0].message.content.strip()
     except Exception as e:
         logger.error(f'Redline generation error: {e}')
