@@ -743,3 +743,34 @@ class ContractChatAPIView(APIView):
             pass
 
         return Response({'success': True, 'message': 'Chat history cleared.'})
+    
+# ── API: Download PDF report ─────────────────────────────────
+class ContractReportAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        from django.http import HttpResponse
+        from .models import ClauseFlag
+        from .utils.risk_scorer import compute_risk_score
+        from .utils.report_gen  import generate_report
+
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+        flags    = ClauseFlag.objects.filter(contract=contract)
+
+        try:
+            score_result = compute_risk_score(contract)
+            pdf_bytes    = generate_report(contract, flags, score_result)
+
+            safe_title = re.sub(r'[^\w\s-]', '', contract.title)[:40].strip()
+            filename   = f'{safe_title}_Review_Report.pdf'
+
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+
+        except Exception as e:
+            logger.error(f'Report generation failed for contract {pk}: {e}')
+            return Response({
+                'success': False,
+                'error':   str(e),
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
