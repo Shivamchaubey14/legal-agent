@@ -132,26 +132,44 @@ class ContractParser:
         self.file_path = file_path
         self.ext       = os.path.splitext(file_path)[1].lower()
 
+    # Max pages we'll attempt OCR on — avoids timeout on giant scans
+    MAX_OCR_PAGES = 60
+
     def parse(self) -> dict:
         """
         Returns:
             {
-                'text':       str,   # full extracted text
+                'text':       str,
                 'page_count': int,
-                'method':     str,   # 'pymupdf' | 'pdfplumber' | 'ocr' | 'docx'
+                'method':     str,
                 'error':      str | None
             }
         """
+        # ── Pre-flight checks ────────────────────────────────
+        if not os.path.exists(self.file_path):
+            return self._error('File not found on disk.')
+
+        file_size = os.path.getsize(self.file_path)
+        if file_size == 0:
+            return self._error('File is empty (0 bytes).')
+
+        if file_size > 25 * 1024 * 1024:   # 25 MB hard cap
+            return self._error('File exceeds 25 MB limit.')
+
+        if self.ext not in ('.pdf', '.docx'):
+            return self._error(f'Unsupported file type: {self.ext}. Only PDF and DOCX are allowed.')
+
         try:
             if self.ext == '.docx':
                 return self._parse_docx()
             elif self.ext == '.pdf':
                 return self._parse_pdf()
-            else:
-                return self._error(f'Unsupported file type: {self.ext}')
+        except MemoryError:
+            logger.error(f'MemoryError parsing {self.file_path}')
+            return self._error('File is too large to process — ran out of memory.')
         except Exception as e:
-            logger.error(f'ContractParser error for {self.file_path}: {e}')
-            return self._error(str(e))
+            logger.error(f'ContractParser unexpected error for {self.file_path}: {e}')
+            return self._error(f'Unexpected error during parsing: {e}')
 
     # ── PDF ──────────────────────────────────────────────────
     def _parse_pdf(self) -> dict:
@@ -175,13 +193,30 @@ class ContractParser:
 
     def _try_pymupdf(self) -> dict | None:
         try:
-            doc        = fitz.open(self.file_path)
+            doc = fitz.open(self.file_path)
+        except fitz.FileDataError as e:
+            logger.warning(f'PyMuPDF: corrupt or unreadable PDF — {e}')
+            return None
+        except Exception as e:
+            logger.warning(f'PyMuPDF failed to open: {e}')
+            return None
+
+        try:
             pages      = []
             page_count = len(doc)
 
+            if page_count == 0:
+                doc.close()
+                logger.warning('PyMuPDF: PDF has 0 pages')
+                return None
+
             for page in doc:
-                text = page.get_text('text')
-                pages.append(text)
+                try:
+                    text = page.get_text('text')
+                    pages.append(text)
+                except Exception as page_err:
+                    logger.warning(f'PyMuPDF: error on page {page.number}: {page_err}')
+                    pages.append('')   # keep page slot, skip broken page
 
             doc.close()
             full_text = '\n\n'.join(pages).strip()
@@ -193,7 +228,9 @@ class ContractParser:
                 'error':      None,
             }
         except Exception as e:
-            logger.warning(f'PyMuPDF failed: {e}')
+            logger.warning(f'PyMuPDF failed during extraction: {e}')
+            try: doc.close()
+            except: pass
             return None
 
     def _try_pdfplumber(self) -> dict | None:
@@ -201,9 +238,18 @@ class ContractParser:
             pages = []
             with pdfplumber.open(self.file_path) as pdf:
                 page_count = len(pdf.pages)
-                for page in pdf.pages:
-                    text = page.extract_text() or ''
-                    pages.append(text)
+
+                if page_count == 0:
+                    logger.warning('pdfplumber: PDF has 0 pages')
+                    return None
+
+                for i, page in enumerate(pdf.pages):
+                    try:
+                        text = page.extract_text() or ''
+                        pages.append(text)
+                    except Exception as page_err:
+                        logger.warning(f'pdfplumber: error on page {i}: {page_err}')
+                        pages.append('')
 
             full_text = '\n\n'.join(pages).strip()
             return {
@@ -212,6 +258,9 @@ class ContractParser:
                 'method':     'pdfplumber',
                 'error':      None,
             }
+        except pdfplumber.utils.exceptions.PDFSyntaxError as e:
+            logger.warning(f'pdfplumber: PDF syntax error (corrupt file) — {e}')
+            return None
         except Exception as e:
             logger.warning(f'pdfplumber failed: {e}')
             return None
@@ -222,7 +271,12 @@ class ContractParser:
             page_count = len(doc)
             pages      = []
 
+            if len(doc) > self.MAX_OCR_PAGES:
+                logger.warning(f'OCR: truncating to {self.MAX_OCR_PAGES} pages (file has {len(doc)})')
+
             for page_num, page in enumerate(doc):
+                if page_num >= self.MAX_OCR_PAGES:
+                    break
                 # Render at 400 DPI instead of 300 — huge quality boost
                 mat = fitz.Matrix(400 / 72, 400 / 72)
                 pix = page.get_pixmap(matrix=mat)
@@ -259,6 +313,9 @@ class ContractParser:
             full_text = '\n\n'.join(pages).strip()
             return {'text': full_text, 'page_count': page_count, 'method': 'ocr', 'error': None}
 
+        except MemoryError:
+            logger.error('OCR failed: out of memory — file may be too large')
+            return self._error('OCR ran out of memory. Try a smaller file.')
         except Exception as e:
             logger.error(f'OCR failed: {e}')
             return self._error(f'OCR failed: {e}')
@@ -287,7 +344,12 @@ class ContractParser:
             }
         except Exception as e:
             logger.error(f'DOCX parsing failed: {e}')
-            return self._error(str(e))
+            # Common cause: password-protected or corrupt DOCX
+            if 'encrypted' in str(e).lower() or 'password' in str(e).lower():
+                return self._error('This DOCX file is password-protected. Please remove the password and re-upload.')
+            if 'BadZipFile' in type(e).__name__ or 'zipfile' in str(e).lower():
+                return self._error('This DOCX file appears to be corrupt or is not a valid Word document.')
+            return self._error(f'Could not read DOCX file: {e}')
 
     # ── Post processing ──────────────────────────────────────
     def _post_process(self, text: str) -> str:
