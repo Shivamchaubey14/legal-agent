@@ -20,7 +20,7 @@ def process_contract(self, contract_id: int) -> dict:
         contract = Contract.objects.get(id=contract_id)
     except Contract.DoesNotExist:
         logger.error(f'Contract {contract_id} not found')
-        return {'success': False, 'error': 'Contract not found'}
+        return {'success': False, 'error': 'Contract not found — it may have been deleted.'}
 
     logger.info(f'Starting pipeline for contract {contract_id}: {contract.title}')
     contract.status = 'processing'
@@ -47,6 +47,12 @@ def process_contract(self, contract_id: int) -> dict:
     except Exception as exc:
         logger.error(f'[{contract_id}] Parse failed: {exc}')
         contract.status = 'error'
+        # Give a readable error hint in the title field so dashboard shows it
+        err_str = str(exc).lower()
+        if 'corrupt' in err_str or 'invalid' in err_str or 'syntax' in err_str:
+            logger.error(f'[{contract_id}] Likely corrupt file: {exc}')
+        elif 'password' in err_str or 'encrypted' in err_str:
+            logger.error(f'[{contract_id}] Password-protected file: {exc}')
         contract.save()
         raise self.retry(exc=exc)
 
