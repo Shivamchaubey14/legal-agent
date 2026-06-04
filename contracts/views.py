@@ -1,6 +1,8 @@
 import os
 import re
 import logging
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit.exceptions import Ratelimited
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 
@@ -95,12 +97,27 @@ class ContractUploadAPIView(APIView):
         if not title:
             title = os.path.splitext(file.name)[0].replace('_', ' ').replace('-', ' ').title()
 
-        safe_name  = get_valid_filename(file.name)
+        from .utils.file_sanitiser import validate_file_magic, sanitise_filename, check_path_traversal
+
+        # ── Magic bytes check ────────────────────────────────
+        is_valid, magic_error = validate_file_magic(file)
+        if not is_valid:
+            return Response({'success': False, 'error': magic_error},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        safe_name  = sanitise_filename(file.name)
         upload_dir = os.path.join('contracts', str(request.user.id))
         full_dir   = os.path.join('media', upload_dir)
         os.makedirs(full_dir, exist_ok=True)
 
-        file_path = os.path.join(full_dir, safe_name)
+        file_path  = os.path.join(full_dir, safe_name)
+
+        # ── Path traversal guard ─────────────────────────────
+        media_root = os.path.join(os.getcwd(), 'media')
+        if not check_path_traversal(media_root, file_path):
+            logger.error(f'Path traversal attempt by user {request.user.id}: {file_path}')
+            return Response({'success': False, 'error': 'Invalid file path.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # Write file in chunks (handles large files)
         with open(file_path, 'wb+') as dest:
@@ -636,9 +653,17 @@ class BulkDeleteAPIView(APIView):
 class ContractChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @ratelimit(key='user', rate='10/m', method='POST', block=False)
     def post(self, request, pk):
         from .models import ChatSession, ChatMessage
         from .utils.chat_agent import run_chat_agent
+
+        # ── Rate limit check ─────────────────────────────────
+        if getattr(request, 'limited', False):
+            return Response({
+                'success': False,
+                'error':   'Too many messages. You can send 10 messages per minute.',
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
         contract = get_object_or_404(Contract, pk=pk, user=request.user)
         question = request.data.get('message', '').strip()
@@ -770,3 +795,12 @@ class ContractReportAPIView(APIView):
                 'success': False,
                 'error':   str(e),
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+# ── 429 handler for ratelimit ────────────────────────────────
+from django.http import JsonResponse
+
+def handler429(request, exception=None):
+    return JsonResponse({
+        'success': False,
+        'error':   'Rate limit exceeded. Please slow down.',
+    }, status=429)
