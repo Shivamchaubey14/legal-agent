@@ -22,13 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*v%e21xdg+)46+88+q^+@)44kj&2e-rcwhu9mx-es&lmxds04m'
+SECRET_KEY  = os.getenv('SECRET_KEY', 'fallback-insecure-key-change-in-production')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+_raw_hosts   = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost')
+ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(',') if h.strip()]
 
 
 # Application definition
@@ -57,7 +57,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'contracts.middleware.OwnershipMiddleware',   # Day 23
 ]
+
+# ── Security headers (safe for both dev and prod) ────────────
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS             = 'DENY'
+SECURE_BROWSER_XSS_FILTER  = True   # legacy header, still useful
 
 ROOT_URLCONF = 'config.urls'
 
@@ -127,7 +133,17 @@ LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Only allow same-origin requests in production.
+# In dev, allow localhost ports.
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS  = False
+    CORS_ALLOWED_ORIGINS    = [
+        o.strip()
+        for o in os.getenv('CORS_ALLOWED_ORIGINS', 'http://127.0.0.1:8000').split(',')
+        if o.strip()
+    ]
 
 # ── Celery ───────────────────────────────────────────────────
 CELERY_BROKER_URL         = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
