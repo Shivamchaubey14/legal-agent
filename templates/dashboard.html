@@ -947,6 +947,48 @@
   .risk-low {
     background: var(--low-bg);
     color: var(--low);
+    animation: badge-in 0.4s ease both;
+  }
+  .risk-medium {
+    background: var(--med-bg);
+    color: var(--med);
+    animation: badge-in 0.4s ease both;
+  }
+  .risk-high {
+    background: var(--high-bg);
+    color: var(--high);
+    animation: badge-in 0.4s 0.1s ease both;
+  }
+  .risk-critical {
+    background: var(--critical-bg);
+    color: var(--critical);
+    animation: badge-in 0.4s 0.2s ease both;
+  }
+
+  @keyframes badge-in {
+    from { opacity: 0; transform: scale(0.7); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* Pulse on high/critical */
+  .risk-high, .risk-critical {
+    position: relative;
+  }
+  .risk-high::before, .risk-critical::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 99px;
+    animation: risk-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .risk-high::before     { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); }
+  .risk-critical::before { box-shadow: 0 0 0 0 rgba(255,59,48,0.4); }
+
+  @keyframes risk-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,107,107,0.35); }
+    70%  { box-shadow: 0 0 0 6px rgba(255,107,107,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,107,107,0); }
   }
   .risk-medium {
     background: var(--med-bg);
@@ -2118,7 +2160,10 @@
                 <circle class="ring-fill" cx="18" cy="18" r="15.9" stroke="var(--{% if c.status == 'done' %}low{% elif c.status == 'processing' %}gold{% else %}txt4{% endif %})" stroke-dasharray="{% if c.status == 'done' %}100 100{% elif c.status == 'processing' %}60 100{% else %}0 100{% endif %}" stroke-dashoffset="0" transform="rotate(-90 18 18)" />
               </svg>
               <div class="grid-card-actions">
-                <button class="grid-action-btn" title="Download" onclick="event.stopPropagation()"><i class="ti ti-download"></i></button>
+                <button class="grid-action-btn" title="Download Report"
+  onclick="event.stopPropagation(); downloadReport(this.closest('[data-id]').dataset.id)">
+  <i class="ti ti-file-download"></i>
+</button>
 {% if c.status == 'error' %}
 <button class="grid-action-btn" style="color:var(--high);" title="Delete" 
   onclick="event.stopPropagation(); confirmDeleteContract('{{ c.id }}', '{{ c.title|escapejs }}')">
@@ -2291,7 +2336,7 @@
           </div>
         </div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
-          <button class="btn" onclick="downloadReport()"><i class="ti ti-file-download"></i> Download Report</button>
+          <button class="btn" onclick="downloadReport(currentModalId)"><i class="ti ti-file-download"></i> Download Report</button>
           <a href="#" class="btn btn-gold" id="modal-full-link"><i class="ti ti-external-link"></i> Full Review</a>
         </div>
       </div>
@@ -2390,7 +2435,8 @@ async function loadKPIs() {
   try {
     const res = await fetch("/api/dashboard/stats/");
     const data = await res.json();
-    if (data.avg_risk_score) document.getElementById("kpi-avg-risk").textContent = data.avg_risk_score + "%";
+    // Compute avg risk from contracts list instead
+loadAvgRiskScore();
     if (data.this_month) document.getElementById("kpi-this-month").textContent = data.this_month;
     if (data.avg_processing_time) document.getElementById("kpi-avg-time").textContent = data.avg_processing_time + "s";
     if (data.pending_qa) document.getElementById("kpi-qa").textContent = data.pending_qa;
@@ -2399,6 +2445,23 @@ async function loadKPIs() {
   }
 }
 loadKPIs();
+
+async function loadAvgRiskScore() {
+  try {
+    const res  = await fetch('/api/contracts/');
+    const data = await res.json();
+    const contracts = (data.contracts || []).filter(c => c.risk_score_value > 0);
+    if (contracts.length === 0) {
+      document.getElementById('kpi-avg-risk').textContent = '–';
+      return;
+    }
+    const avg = Math.round(contracts.reduce((s, c) => s + c.risk_score_value, 0) / contracts.length);
+    const el  = document.getElementById('kpi-avg-risk');
+    el.textContent = avg;
+    el.className   = `kpi-value ${avg >= 70 ? 'red' : avg >= 40 ? '' : 'green'}`;
+  } catch(e) {}
+}
+loadAvgRiskScore();
 
 async function loadRiskChart() {
   try {
@@ -2495,18 +2558,43 @@ function switchView(mode) {
 document.querySelectorAll(".view-mode-btn").forEach((btn) => btn.addEventListener("click", () => switchView(btn.dataset.view)));
 
 // Sort
-let sortAsc = false;
-const sortBtn = document.getElementById("sort-btn");
+const SORT_MODES = ['date-desc', 'date-asc', 'risk-desc', 'risk-asc', 'status'];
+const SORT_LABELS = {
+  'date-desc':  '<i class="ti ti-calendar-down"></i> Newest',
+  'date-asc':   '<i class="ti ti-calendar-up"></i> Oldest',
+  'risk-desc':  '<i class="ti ti-alert-triangle"></i> Highest Risk',
+  'risk-asc':   '<i class="ti ti-shield-check"></i> Lowest Risk',
+  'status':     '<i class="ti ti-activity"></i> Status',
+};
+const RISK_ORDER = { critical: 4, high: 3, medium: 2, low: 1, '': 0 };
+let currentSort = 'date-desc';
+
+const sortBtn = document.getElementById('sort-btn');
 if (sortBtn) {
-  sortBtn.addEventListener("click", () => {
-    sortAsc = !sortAsc;
-    sortBtn.innerHTML = `<i class="ti ti-arrows-sort"></i> ${sortAsc ? "Oldest" : "Newest"}`;
-    const list = document.getElementById("contracts-list");
-    if (!list) return;
-    const cards = [...list.querySelectorAll(".contract-item")];
-    cards.sort((a, b) => { const ta = a.querySelector(".item-meta span")?.textContent || ""; const tb = b.querySelector(".item-meta span")?.textContent || ""; return sortAsc ? ta.localeCompare(tb) : tb.localeCompare(ta); });
-    cards.forEach((c) => list.appendChild(c));
+  sortBtn.addEventListener('click', () => {
+    const idx = SORT_MODES.indexOf(currentSort);
+    currentSort = SORT_MODES[(idx + 1) % SORT_MODES.length];
+    sortBtn.innerHTML = SORT_LABELS[currentSort];
+    applySort();
   });
+}
+
+function applySort() {
+  const list = document.querySelector('#view-list .contracts-list');
+  if (!list) return;
+  const cards = [...list.querySelectorAll('.contract-item')];
+
+  cards.sort((a, b) => {
+    if (currentSort === 'risk-desc') return (RISK_ORDER[b.dataset.risk] || 0) - (RISK_ORDER[a.dataset.risk] || 0);
+    if (currentSort === 'risk-asc')  return (RISK_ORDER[a.dataset.risk] || 0) - (RISK_ORDER[b.dataset.risk] || 0);
+    if (currentSort === 'status')    return (a.dataset.status || '').localeCompare(b.dataset.status || '');
+    // date — use data-id as proxy (higher id = newer)
+    const idA = parseInt(a.dataset.id || 0);
+    const idB = parseInt(b.dataset.id || 0);
+    return currentSort === 'date-desc' ? idB - idA : idA - idB;
+  });
+
+  cards.forEach(c => list.appendChild(c));
 }
 
 // Bulk Actions
@@ -2521,6 +2609,7 @@ function updateBulkBar() {
 document.getElementById("bulk-close")?.addEventListener("click", () => { document.querySelectorAll(".item-check:checked").forEach((c) => { c.checked = false; }); updateBulkBar(); });
 
 let pendingBulkAction = null;
+let currentModalId = null;
 
 function getCsrf() {
   return document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
@@ -2745,6 +2834,7 @@ async function openContractModal(el) {
   const title = el.dataset.title || el.querySelector(".item-title, .kanban-card-title, .grid-card-title")?.textContent || "Contract";
   const status = el.dataset.status || "done";
   const id = el.dataset.id;
+  currentModalId = id;
   document.getElementById("modal-contract-title").textContent = title;
   document.getElementById("modal-status").className = `status-chip status-${status}`;
   document.getElementById("modal-status").textContent = status.charAt(0).toUpperCase() + status.slice(1);
@@ -3143,6 +3233,14 @@ function drillDown(type) {
   document.querySelectorAll(".filter-pill").forEach((b) => b.classList.remove("active")); 
   document.querySelector(`.filter-pill[data-filter="${filter}"]`)?.classList.add("active"); 
   filterCards(); 
+}
+function downloadReport(id) {
+  if (!id) return;
+  const a    = document.createElement('a');
+  a.href     = `/api/contracts/${id}/report/`;
+  a.download = '';
+  a.click();
+  addActivityItem(`📄 Report download started`, 'info');
 }
 
 function openItemMenu(e, id) { console.log("Menu for contract:", id); }
