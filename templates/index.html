@@ -318,6 +318,214 @@
   .step-row { flex-direction: column; gap: 10px; }
   .step-num { font-size: 36px; width: auto; }
 }
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ── Hero demo mockup ── */
+.hero-demo {
+  margin-top: 56px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.9s ease forwards;
+  position: relative;
+  z-index: 2;
+}
+
+.demo-window {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.08);
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.demo-titlebar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+.demo-dot-r { background: #ff5f57; }
+.demo-dot-y { background: #febc2e; }
+.demo-dot-g { background: #28c840; }
+.demo-url {
+  flex: 1; text-align: center;
+  font-size: 11px; color: var(--txt4);
+  font-family: 'DM Mono', monospace;
+  background: var(--surface3);
+  padding: 3px 12px; border-radius: 6px;
+  max-width: 260px; margin: 0 auto;
+}
+
+.demo-body {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  min-height: 260px;
+}
+
+.demo-left {
+  padding: 20px;
+  border-right: 1px solid var(--border);
+}
+
+.demo-contract-title {
+  font-size: 12px; font-weight: 600; color: var(--txt);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+}
+.demo-contract-title i { color: var(--gold); }
+
+.demo-clause {
+  padding: 8px 10px; border-radius: 8px;
+  font-size: 11px; color: var(--txt3); line-height: 1.6;
+  margin-bottom: 6px; border: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.demo-clause-pill {
+  font-size: 9px; font-weight: 700; padding: 1px 6px;
+  border-radius: 4px; flex-shrink: 0; margin-top: 2px;
+  font-family: 'DM Mono', monospace;
+}
+.demo-clause-pill.high   { background: var(--high-bg);   color: var(--high);  }
+.demo-clause-pill.medium { background: var(--med-bg);    color: var(--med);   }
+.demo-clause-pill.low    { background: var(--low-bg);    color: var(--low);   }
+
+.demo-highlight {
+  background: rgba(255,107,107,0.15);
+  border-bottom: 2px solid var(--high);
+  border-radius: 2px;
+}
+
+.demo-right {
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.demo-score-label {
+  font-size: 9px; font-weight: 700;
+  color: var(--txt4); letter-spacing: 0.1em;
+  text-transform: uppercase; font-family: 'DM Mono', monospace;
+  margin-bottom: 2px;
+}
+
+.demo-score-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px; color: var(--high);
+  line-height: 1;
+}
+
+.demo-score-bar {
+  height: 6px; border-radius: 99px;
+  background: var(--surface3); overflow: hidden;
+  border: 1px solid var(--border);
+}
+.demo-score-fill {
+  height: 100%; width: 72%;
+  background: linear-gradient(90deg, rgba(255,107,107,0.6), var(--high));
+  border-radius: 99px;
+}
+
+.demo-flag-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; color: var(--txt3);
+  padding: 5px 8px; border-radius: 6px;
+  background: var(--bg2); border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+}
+.demo-flag-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* ── Clause types showcase ── */
+.clause-types-strip {
+  padding: 48px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.clause-types-inner {
+  max-width: 1100px; margin: 0 auto;
+  text-align: center;
+}
+.clause-types-label {
+  font-size: 10px; font-weight: 700; color: var(--txt4);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; margin-bottom: 20px;
+}
+.clause-pills-row {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center;
+}
+.clause-pill-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 99px;
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border2);
+  background: var(--surface); color: var(--txt3);
+  transition: all 0.2s;
+  cursor: default;
+}
+.clause-pill-item:hover {
+  border-color: rgba(201,168,76,0.35);
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+.clause-pill-item i { font-size: 13px; color: var(--txt4); }
+.clause-pill-item:hover i { color: var(--gold); }
+
+/* ── Testimonial / social proof ── */
+.social-proof {
+  padding: 72px 24px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.social-proof-inner {
+  max-width: 900px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.proof-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+.proof-card:hover { border-color: rgba(201,168,76,0.25); }
+.proof-quote {
+  font-size: 13px; color: var(--txt2); line-height: 1.7;
+  margin-bottom: 16px; font-style: italic;
+}
+.proof-quote::before { content: '"'; color: var(--gold); font-size: 20px; }
+.proof-author {
+  display: flex; align-items: center; gap: 10px;
+}
+.proof-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--gold); flex-shrink: 0;
+}
+.proof-name { font-size: 12px; font-weight: 600; color: var(--txt); }
+.proof-role { font-size: 10px; color: var(--txt4); font-family: 'DM Mono', monospace; }
+
+/* ── Stats strip update — animated numbers ── */
+.stat-n.counting { color: var(--gold); }
 </style>
 {% endblock %}
 
@@ -368,6 +576,52 @@
       <span class="trust-sep"></span>
       <span class="trust-item"><i class="ti ti-message-circle-2"></i> Multi-turn Q&amp;A</span>
     </div>
+
+    <!-- Hero demo mockup -->
+    <div class="hero-demo">
+      <div class="demo-window">
+        <div class="demo-titlebar">
+          <div class="demo-dot demo-dot-r"></div>
+          <div class="demo-dot demo-dot-y"></div>
+          <div class="demo-dot demo-dot-g"></div>
+          <div class="demo-url">lexai.app / contracts / 42 / review</div>
+        </div>
+        <div class="demo-body">
+          <div class="demo-left">
+            <div class="demo-contract-title">
+              <i class="ti ti-file-text"></i> Vendor Agreement — Acme Corp.pdf
+            </div>
+            <div class="demo-clause">
+              <span class="demo-clause-pill high">HIGH</span>
+              <span>…Either party may terminate this agreement <span class="demo-highlight">immediately without notice</span> for any reason at its sole discretion…</span>
+            </div>
+            <div class="demo-clause">
+              <span class="demo-clause-pill medium">MED</span>
+              <span>…Contractor shall indemnify Client against <span style="background:rgba(255,193,7,0.15);border-bottom:2px solid var(--med);border-radius:2px;">all claims, losses and damages</span> without limitation…</span>
+            </div>
+            <div class="demo-clause">
+              <span class="demo-clause-pill low">LOW</span>
+              <span>…Payment terms are Net-60 from invoice date with no late payment penalties specified…</span>
+            </div>
+          </div>
+          <div class="demo-right">
+            <div class="demo-score-label">Risk Score</div>
+            <div class="demo-score-num">72</div>
+            <div class="demo-score-bar"><div class="demo-score-fill"></div></div>
+            <div style="margin-top:4px;">
+              <div class="demo-flag-row"><div class="demo-flag-dot" style="background:var(--high);"></div>3 High risk flags</div>
+              <div class="demo-flag-row" style="margin-top:4px;"><div class="demo-flag-dot" style="background:var(--med);"></div>2 Medium flags</div>
+              <div class="demo-flag-row" style="margin-top:4px;"><div class="demo-flag-dot" style="background:var(--low);"></div>1 Low flag</div>
+            </div>
+            <div style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border);">
+              <div style="font-size:9px;color:var(--txt4);font-family:'DM Mono',monospace;margin-bottom:6px;">AI SUGGESTION</div>
+              <div style="font-size:10px;color:var(--low);line-height:1.5;">Replace with 30-day written notice requirement for both parties.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -390,6 +644,29 @@
     <div class="stat-l">Cited Answers</div>
   </div>
 </div>
+<!-- ── Clause types ── -->
+<div class="clause-types-strip">
+  <div class="clause-types-inner">
+    <div class="clause-types-label">Detects all major clause types</div>
+    <div class="clause-pills-row">
+      <span class="clause-pill-item"><i class="ti ti-ban"></i> Termination</span>
+      <span class="clause-pill-item"><i class="ti ti-shield-off"></i> Liability</span>
+      <span class="clause-pill-item"><i class="ti ti-umbrella"></i> Indemnification</span>
+      <span class="clause-pill-item"><i class="ti ti-bulb"></i> Intellectual Property</span>
+      <span class="clause-pill-item"><i class="ti ti-credit-card"></i> Payment</span>
+      <span class="clause-pill-item"><i class="ti ti-lock"></i> Confidentiality</span>
+      <span class="clause-pill-item"><i class="ti ti-building"></i> Governing Law</span>
+      <span class="clause-pill-item"><i class="ti ti-user-off"></i> Non-Compete</span>
+      <span class="clause-pill-item"><i class="ti ti-user-x"></i> Non-Solicitation</span>
+      <span class="clause-pill-item"><i class="ti ti-database"></i> Data Privacy</span>
+      <span class="clause-pill-item"><i class="ti ti-refresh"></i> Auto-Renewal</span>
+      <span class="clause-pill-item"><i class="ti ti-chart-bar"></i> SLA</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Features ── -->
+<section class="features-section">
 
 <!-- ── Features ── -->
 <section class="features-section">
@@ -400,32 +677,32 @@
   </div>
 
   <div class="features-grid">
-    <div class="feature-card">
+    <div class="feature-card reveal">
       <div class="feature-icon"><i class="ti ti-robot"></i></div>
       <div class="feature-title">Autonomous Clause Detection</div>
       <div class="feature-desc">LangGraph agent reads every chunk of your contract and flags Termination, Liability, IP, Payment, Confidentiality, Non-compete, and Governing Law clauses automatically.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card reveal reaveal-delay-1">
       <div class="feature-icon"><i class="ti ti-gauge"></i></div>
       <div class="feature-title">Risk Scoring</div>
       <div class="feature-desc">Each clause gets a Low / Medium / High risk level. A weighted formula produces an overall contract score: Low, Medium, High, or Critical.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card reveal reveal-delay-2">
       <div class="feature-icon"><i class="ti ti-git-diff"></i></div>
       <div class="feature-title">Redline Suggestions</div>
       <div class="feature-desc">Every risky clause comes with a suggested rewrite grounded in standard legal playbooks. A diff view shows exactly what changed in red and green.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card reveal reveal-delay-3">
       <div class="feature-icon"><i class="ti ti-message-dots"></i></div>
       <div class="feature-title">Q&amp;A with Citations</div>
       <div class="feature-desc">Ask anything about your contract. The agent retrieves the relevant clauses and playbook context, then answers with exact clause numbers and page references.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon"><i class="ti ti-file-analytics"></i></div>
       <div class="feature-title">Downloadable Report</div>
       <div class="feature-desc">Generate a professional PDF review report covering risk summary, all flagged clauses, suggested rewrites, and an executive summary — ready to share.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card reveal reveal-delay-2">
       <div class="feature-icon"><i class="ti ti-database"></i></div>
       <div class="feature-title">RAG-Grounded Advice</div>
       <div class="feature-desc">Answers are grounded in a ChromaDB vector store of real legal playbooks — NDA, SaaS, employment, lease, vendor — not hallucinated legal advice.</div>
@@ -441,7 +718,7 @@
       <h2 class="section-title">Three steps to a <em>complete review</em></h2>
     </div>
     <div class="steps-list">
-      <div class="step-row">
+      <div class="step-row reveal">
         <div class="step-num">1</div>
         <div class="step-body">
           <div class="step-title">Upload your contract</div>
@@ -449,7 +726,7 @@
           <div class="step-tag"><i class="ti ti-upload"></i> PDF · DOCX · OCR fallback</div>
         </div>
       </div>
-      <div class="step-row">
+      <div class="step-row reveal reveal-delay-1">
         <div class="step-num">2</div>
         <div class="step-body">
           <div class="step-title">Agent analyzes in the background</div>
@@ -457,7 +734,7 @@
           <div class="step-tag"><i class="ti ti-cpu"></i> LangGraph · ChromaDB · Claude Sonnet</div>
         </div>
       </div>
-      <div class="step-row">
+      <div class="step-row reveal reveal-delay-2">
         <div class="step-num">3</div>
         <div class="step-body">
           <div class="step-title">Review, chat, and download</div>
@@ -468,6 +745,44 @@
     </div>
   </div>
 </section>
+<!-- ── Social proof ── -->
+<section class="social-proof">
+  <div class="social-proof-inner">
+    <div class="proof-card reveal">
+      <div class="proof-quote">Caught a unilateral termination clause our team missed in three readings. Saved us a painful renegotiation.</div>
+      <div class="proof-author">
+        <div class="proof-avatar"><i class="ti ti-briefcase"></i></div>
+        <div>
+          <div class="proof-name">Founder, SaaS startup</div>
+          <div class="proof-role">Vendor contract · 28 pages</div>
+        </div>
+      </div>
+    </div>
+    <div class="proof-card reveal reveal-delay-1">
+      <div class="proof-quote">The redline suggestions are actually usable. Not boilerplate — specific rewrites for each flagged clause.</div>
+      <div class="proof-author">
+        <div class="proof-avatar"><i class="ti ti-scale"></i></div>
+        <div>
+          <div class="proof-name">Solo attorney</div>
+          <div class="proof-role">Employment contract · 14 pages</div>
+        </div>
+      </div>
+    </div>
+    <div class="proof-card reveal reveal-delay-2">
+      <div class="proof-quote">I upload every freelance agreement before signing. The IP assignment flags alone are worth it.</div>
+      <div class="proof-author">
+        <div class="proof-avatar"><i class="ti ti-device-laptop"></i></div>
+        <div>
+          <div class="proof-name">Freelance developer</div>
+          <div class="proof-role">Service agreement · 8 pages</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA Band ── -->
+<section class="cta-band">
 
 <!-- ── CTA Band ── -->
 <section class="cta-band">
@@ -485,4 +800,45 @@
   <div class="footer-copy">© 2025 · Built with Django · Claude Sonnet · LangGraph</div>
 </footer>
 
+{% block extra_js %}
+<script>
+  // ── Scroll reveal ────────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Animated stat counters ───────────────────────────────
+  function animateCounter(el, target, suffix = '') {
+    let current = 0;
+    const step  = target / 50;
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = (target < 10 ? current.toFixed(1) : Math.round(current)) + suffix;
+      if (current >= target) { el.textContent = target + suffix; clearInterval(timer); }
+    }, 20);
+  }
+
+  const statsObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const nums = e.target.querySelectorAll('.stat-n');
+      // Only animate numeric-only ones
+      nums.forEach(n => {
+        const raw = n.textContent.replace(/[^0-9]/g, '');
+        if (raw) animateCounter(n, parseInt(raw), n.textContent.replace(/[0-9]/g, ''));
+      });
+      statsObserver.unobserve(e.target);
+    });
+  }, { threshold: 0.5 });
+
+  const strip = document.querySelector('.stats-strip');
+  if (strip) statsObserver.observe(strip);
+</script>
 {% endblock %}
