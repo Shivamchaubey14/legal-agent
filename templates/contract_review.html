@@ -812,9 +812,19 @@
       </div>
     </div>
     <div class="review-actions">
-      <button class="btn" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
-      <button class="btn btn-gold" id="reanalyze-btn" onclick="reanalyze()"><i class="ti ti-refresh"></i> Re-analyze</button>
-    </div>
+  <button class="btn" onclick="window.print()">
+    <i class="ti ti-printer"></i> Print
+  </button>
+  <a href="/api/contracts/{{ contract.id }}/report/"
+     class="btn"
+     download
+     id="report-btn">
+    <i class="ti ti-file-download"></i> Download Report
+  </a>
+  <button class="btn btn-gold" id="reanalyze-btn" onclick="reanalyze()">
+    <i class="ti ti-refresh"></i> Re-analyze
+  </button>
+</div>
   </div>
 
   <!-- Gauge + Stats -->
