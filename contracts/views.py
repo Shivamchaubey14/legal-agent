@@ -390,7 +390,6 @@ def contract_review_page(request, pk):
     contract = get_object_or_404(Contract, pk=pk, user=request.user)
     flags    = ClauseFlag.objects.filter(contract=contract)
 
-    # Clean the raw_text before showing in template
     raw_text = contract.raw_text or ''
     raw_text = clean_ocr_text(raw_text)
     raw_text = strip_stamp_paper_header(raw_text)
@@ -403,13 +402,14 @@ def contract_review_page(request, pk):
             'text':        flag.clause_text,
             'reason':      flag.reason,
             'suggestion':  flag.suggestion,
+            'redline':     flag.redline,        # ← add this
             'page_number': flag.page_number,
         })
 
     return render(request, 'contract_review.html', {
-        'contract':  contract,
-        'raw_text':  raw_text,
-        'flags':     flags_data,
+        'contract': contract,
+        'raw_text': raw_text,
+        'flags':    flags_data,
     })
 
 

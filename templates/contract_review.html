@@ -4,130 +4,240 @@
 
 {% block extra_css %}
 <style>
-  .page {
-    padding: 0 !important;
-    background: var(--bg);
-  }
+  .page { padding: 0 !important; background: var(--bg); }
 
   .review-container {
-    max-width: 1400px;
+    max-width: 1500px;
     margin: 0 auto;
-    padding: 40px 48px 80px;
-    width: 100%;
+    padding: 32px 40px 80px;
   }
 
   @media (max-width: 768px) {
-    .review-container {
-      padding: 24px 24px 48px;
-    }
+    .review-container { padding: 20px 16px 48px; }
   }
 
-  /* Header */
   .review-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 32px;
+    gap: 16px;
+    margin-bottom: 28px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--border);
   }
 
   .review-title h1 {
     font-family: "Instrument Serif", serif;
-    font-size: 32px;
+    font-size: 28px;
     color: var(--txt);
-    letter-spacing: -0.025em;
-    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
   }
 
-  .review-title h1 span {
-    color: var(--gold);
-    font-style: italic;
-  }
+  .review-title h1 span { color: var(--gold); font-style: italic; }
 
   .review-meta {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     flex-wrap: wrap;
     font-size: 12px;
     color: var(--txt3);
     font-family: "DM Mono", monospace;
   }
 
-  .review-actions {
-    display: flex;
-    gap: 12px;
-  }
+  .review-actions { display: flex; gap: 10px; }
 
-  /* Stats Grid */
-  .stats-grid {
+  /* ── Gauge Row ── */
+  .gauge-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: 240px 1fr;
     gap: 20px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
+    align-items: stretch;
   }
 
-  .stat-card {
+  @media (max-width: 900px) { .gauge-row { grid-template-columns: 1fr; } }
+
+  .gauge-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
+    border-radius: 20px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
   }
 
-  .stat-label {
-    font-size: 11px;
+  .gauge-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .gauge-label {
+    font-size: 10px;
     color: var(--txt4);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .stat-value {
-    font-family: "Instrument Serif", serif;
-    font-size: 36px;
-    color: var(--txt);
-  }
-
-  .stat-risk {
-    font-size: 24px;
     font-weight: 700;
   }
 
-  /* Two Column Layout */
-  .review-grid {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 32px;
+  .pill-gauge-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
   }
 
-  @media (max-width: 1024px) {
-    .review-grid {
-      grid-template-columns: 1fr;
-    }
+  .pill-gauge-number {
+    font-family: "Instrument Serif", serif;
+    font-size: 52px;
+    line-height: 1;
+    color: var(--txt);
+    letter-spacing: -0.03em;
   }
 
-  /* Contract Text */
-  .contract-text-panel {
+  .pill-gauge-number span {
+    font-size: 22px;
+    color: var(--txt3);
+    vertical-align: super;
+    font-family: "DM Mono", monospace;
+  }
+
+  .pill-gauge-bar-wrap {
+    width: 100%;
+    position: relative;
+    height: 14px;
+    background: var(--surface3);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .pill-gauge-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .pill-gauge-ticks {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    pointer-events: none;
+  }
+
+  .pill-gauge-tick {
+    width: 1px;
+    height: 60%;
+    background: rgba(0,0,0,0.15);
+  }
+
+  .pill-gauge-labels {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    font-family: "DM Mono", monospace;
+    color: var(--txt4);
+    margin-top: 2px;
+  }
+
+  .gauge-risk-pill {
+    padding: 5px 18px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1.5px solid currentColor;
+    margin-top: 4px;
+  }
+
+  .gauge-risk-pill.risk-low      { color: var(--low);      background: rgba(61,214,140,0.1); }
+  .gauge-risk-pill.risk-medium   { color: var(--med);      background: rgba(255,193,7,0.1);  }
+  .gauge-risk-pill.risk-high     { color: var(--high);     background: rgba(255,107,107,0.1);}
+  .gauge-risk-pill.risk-critical { color: var(--critical); background: rgba(255,59,48,0.1);  }
+
+  /* ── Stats strip ── */
+  .stats-strip {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .stat-item:nth-child(1),.stat-item:nth-child(2),.stat-item:nth-child(3) { border-bottom: 1px solid var(--border); }
+  .stat-item:nth-child(1),.stat-item:nth-child(2),.stat-item:nth-child(4),.stat-item:nth-child(5) { border-right: 1px solid var(--border); }
+
+  .stat-item .val { font-family: "Instrument Serif", serif; font-size: 32px; color: var(--txt); line-height: 1; display: block; }
+  .stat-item .lbl { font-size: 10px; color: var(--txt4); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+
+  .val-high     { color: var(--high) !important; }
+  .val-medium   { color: var(--med) !important; }
+  .val-low      { color: var(--low) !important; }
+  .val-critical { color: var(--critical) !important; }
+
+  /* ── Main grid ── */
+  .review-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 1100px) { .review-grid { grid-template-columns: 1fr; } }
+
+  /* ── Contract panel ── */
+  .contract-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
     overflow: hidden;
+    position: sticky;
+    top: 70px;
   }
 
   .panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 14px 18px;
     border-bottom: 1px solid var(--border);
     background: var(--surface2);
   }
 
   .panel-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--txt);
     display: flex;
@@ -135,144 +245,327 @@
     gap: 8px;
   }
 
-  .panel-title i {
-    color: var(--gold);
-    font-size: 16px;
-  }
+  .panel-title i { color: var(--gold); }
 
+  /* ── Generative contract text ── */
   .contract-text {
-    padding: 24px;
-    max-height: 600px;
+    padding: 28px;
+    height: 580px;
     overflow-y: auto;
-    font-size: 13px;
-    line-height: 1.7;
+    font-size: 13.5px;
+    line-height: 2;
     color: var(--txt2);
-    white-space: pre-wrap;
     word-wrap: break-word;
-    font-family: 'Geist', monospace;
+    scroll-behavior: smooth;
+    font-family: 'Georgia', serif;
   }
 
-  /* Flags Panel */
-  .flags-panel {
+  /* Typewriter cursor */
+  .ct-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--gold);
+    vertical-align: text-bottom;
+    animation: blink 0.8s step-end infinite;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  /* Section headings */
+  .ct-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .ct-section-icon {
+    width: 28px; height: 28px;
+    background: var(--gold-dim);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .ct-section-title {
+    font-family: "Instrument Serif", serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+  }
+
+  /* Clause bullet pills */
+  .ct-clause {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .ct-clause:hover { border-color: rgba(201,168,76,0.25); }
+
+  .ct-clause-pill {
+    flex-shrink: 0;
+    background: var(--gold-dim);
+    color: var(--gold);
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    font-family: "DM Mono", monospace;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  .ct-clause-text { flex: 1; line-height: 1.7; color: var(--txt2); }
+
+  /* Inline tokens */
+  .ct-party   { color: #639dff; font-weight: 600; }
+  .ct-date    { color: #a27eff; font-style: italic; }
+  .ct-amount  { color: var(--low); font-weight: 700; font-family: "DM Mono", monospace; }
+  .ct-legal   { color: var(--med); font-style: italic; font-weight: 600; }
+  .ct-whereas {
+    display: block;
+    padding: 8px 12px;
+    margin: 6px 0;
+    background: rgba(99,157,255,0.05);
+    border-left: 3px solid rgba(99,157,255,0.3);
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+    color: var(--txt3);
+  }
+
+  /* Plain paragraph */
+  .ct-para { display: block; margin: 6px 0; }
+
+  /* Highlights */
+  .highlight-high   { background: rgba(255,107,107,0.15); border-bottom: 2px solid var(--high);   border-radius: 3px; cursor: pointer; padding: 1px 2px; }
+  .highlight-medium { background: rgba(255,193,7,0.15);   border-bottom: 2px solid var(--med);    border-radius: 3px; cursor: pointer; padding: 1px 2px; }
+  .highlight-low    { background: rgba(61,214,140,0.12);  border-bottom: 2px solid var(--low);    border-radius: 3px; cursor: pointer; padding: 1px 2px; }
+  .highlight-active { background: rgba(201,168,76,0.22) !important; border-bottom-color: var(--gold) !important; outline: 1px solid rgba(201,168,76,0.3); }
+
+  /* ── Flags panel ── */
+  .flags-panel { display: flex; flex-direction: column; gap: 16px; }
+
+  .flags-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  .flags-title { font-size: 14px; font-weight: 600; color: var(--txt); display: flex; align-items: center; gap: 8px; }
+
+  .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .pill {
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); color: var(--txt3);
+    cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em;
+  }
+
+  .pill:hover { border-color: var(--gold); color: var(--gold); }
+  .pill.active { background: var(--gold); border-color: var(--gold); color: #000; }
+  .pill-high.active   { background: var(--high);   border-color: var(--high);   color: #fff; }
+  .pill-medium.active { background: var(--med);    border-color: var(--med);    color: #000; }
+  .pill-low.active    { background: var(--low);    border-color: var(--low);    color: #000; }
+
+  /* Flag cards */
+  .flag-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; transition: all 0.2s; cursor: pointer;
+  }
+  .flag-card:hover { border-color: rgba(201,168,76,0.4); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .flag-card.active-card { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,0.2); }
+
+  .flag-card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; gap: 10px; }
+  .flag-type { font-size: 13px; font-weight: 600; color: var(--txt); display: flex; align-items: center; gap: 6px; }
+  .flag-type i { font-size: 14px; color: var(--txt3); }
+
+  .flag-body { padding: 0 16px 14px; display: block; }
+  .flag-card.collapsed .flag-body { display: none; }
+
+  .flag-toggle { font-size: 12px; color: var(--txt4); transition: transform 0.2s; }
+  .flag-card.collapsed .flag-toggle { transform: rotate(-90deg); }
+
+  .flag-excerpt { font-size: 11px; color: var(--txt3); line-height: 1.6; margin-bottom: 10px; padding: 8px 10px; background: var(--bg2); border-radius: var(--radius-sm); font-style: italic; border-left: 2px solid var(--border2); }
+  .flag-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; opacity: 0.6; }
+  .flag-section-label.lbl-reason     { color: var(--high); }
+  .flag-section-label.lbl-suggestion { color: var(--low);  }
+  .flag-section-label.lbl-redline    { color: var(--gold); }
+  .flag-reason     { font-size: 11px; color: var(--txt2); line-height: 1.6; margin-bottom: 8px; padding: 8px 10px; background: rgba(255,107,107,0.04); border-radius: var(--radius-sm); border-left: 2px solid var(--high); }
+  .flag-suggestion { font-size: 11px; color: var(--txt2); line-height: 1.6; margin-bottom: 8px; padding: 8px 10px; background: rgba(61,214,140,0.04); border-radius: var(--radius-sm); border-left: 2px solid var(--low); }
+  .flag-redline    { font-size: 11px; color: var(--txt2); line-height: 1.6; padding: 8px 10px; background: rgba(201,168,76,0.05); border-radius: var(--radius-sm); border-left: 2px solid var(--gold); font-family: 'Geist', monospace; }
+
+  .copy-btn { float: right; font-size: 10px; padding: 2px 8px; margin-left: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--txt3); cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .risk-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 99px; letter-spacing: 0.06em; font-family: "DM Mono", monospace; }
+  .risk-low      { background: var(--low-bg);      color: var(--low); }
+  .risk-medium   { background: var(--med-bg);      color: var(--med); }
+  .risk-high     { background: var(--high-bg);     color: var(--high); }
+  .risk-critical { background: var(--critical-bg); color: var(--critical); }
+
+  .empty-flags { text-align: center; padding: 60px 24px; color: var(--txt4); background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+  .empty-flags i { font-size: 40px; margin-bottom: 12px; display: block; color: var(--low); }
+
+  .reanalyze-strip { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .reanalyze-strip span { font-size: 12px; color: var(--txt3); }
+
+  .contract-text::-webkit-scrollbar { width: 5px; }
+  .contract-text::-webkit-scrollbar-track { background: transparent; }
+  .contract-text::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+  /* Generating state */
+  .generating-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--gold); font-family: "DM Mono", monospace;
+    padding: 3px 10px; background: var(--gold-dim); border-radius: 99px;
+  }
+  .gen-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--gold);
+    animation: gen-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes gen-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+  /* ── Diff view ── */
+  .diff-toggle-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 10px; border-radius: 99px;
+    border: 1px solid rgba(201,168,76,0.3);
+    background: var(--gold-dim); color: var(--gold);
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em;
+    margin-top: 8px;
+  }
+  .diff-toggle-btn:hover { background: rgba(201,168,76,0.2); }
+
+  .diff-view {
+    display: none;
+    margin-top: 10px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border2);
+    font-size: 11.5px;
+    line-height: 1.7;
+    font-family: 'DM Mono', monospace;
+  }
+  .diff-view.open { display: block; }
+
+  .diff-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .diff-col-label {
+    padding: 6px 12px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border2);
+  }
+  .diff-col-label.original  { background: rgba(255,107,107,0.08); color: var(--high);  border-right: 1px solid var(--border2); }
+  .diff-col-label.suggested { background: rgba(61,214,140,0.08);  color: var(--low); }
+
+  .diff-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .diff-original {
+    padding: 12px 14px;
+    background: rgba(255,107,107,0.04);
+    color: var(--txt3);
+    border-right: 1px solid var(--border2);
+    font-style: italic;
+    word-break: break-word;
+  }
+  .diff-suggested {
+    padding: 12px 14px;
+    background: rgba(61,214,140,0.04);
+    color: var(--txt2);
+    word-break: break-word;
+  }
+
+  /* Inline diff tokens */
+  .del { background: rgba(255,107,107,0.18); color: var(--high); border-radius: 3px; padding: 0 2px; text-decoration: line-through; }
+  .ins { background: rgba(61,214,140,0.18);  color: var(--low);  border-radius: 3px; padding: 0 2px; }
+
+  /* ── Clause type filter ── */
+  .type-filter-wrap {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 12px 16px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    overflow: hidden;
-    position: sticky;
-    top: 70px;
   }
-
-  .flags-list {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-height: 600px;
-    overflow-y: auto;
+  .type-filter-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--txt4); letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex; align-items: center;
+    margin-right: 4px;
+    font-family: 'DM Mono', monospace;
   }
-
-  .flag-card {
-    background: var(--bg2);
+  .type-pill {
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 10.5px; font-weight: 600;
     border: 1px solid var(--border2);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    transition: all 0.2s;
-  }
-
-  .flag-card:hover {
-    border-color: rgba(201, 168, 76, 0.3);
-    transform: translateX(2px);
-  }
-
-  .flag-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .flag-type {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--txt);
-  }
-
-  .flag-text {
-    font-size: 12px;
+    background: var(--surface2);
     color: var(--txt3);
-    line-height: 1.6;
-    margin-bottom: 12px;
-    padding: 10px;
-    background: var(--surface);
-    border-radius: var(--radius-sm);
-    font-style: italic;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.03em;
   }
+  .type-pill:hover { border-color: var(--gold); color: var(--gold); }
+  .type-pill.active { background: var(--gold-dim); border-color: rgba(201,168,76,0.4); color: var(--gold); }
 
-  .flag-reason {
-    font-size: 11px;
-    color: var(--txt4);
-    margin-bottom: 10px;
-    padding: 8px;
-    background: rgba(255, 107, 107, 0.05);
-    border-radius: var(--radius-sm);
-    border-left: 2px solid var(--high);
+  /* Accept button */
+  .accept-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700;
+    padding: 4px 12px; border-radius: 99px;
+    border: 1px solid rgba(61,214,140,0.3);
+    background: rgba(61,214,140,0.08); color: var(--low);
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
   }
+  .accept-btn:hover { background: rgba(61,214,140,0.15); }
+  .accept-btn.accepted { background: var(--low); color: #000; border-color: var(--low); }
 
-  .flag-suggestion {
-    font-size: 11px;
-    color: var(--low);
-    padding: 8px;
-    background: rgba(61, 214, 140, 0.05);
-    border-radius: var(--radius-sm);
-    border-left: 2px solid var(--low);
-  }
-
-  .flag-suggestion i, .flag-reason i {
-    margin-right: 6px;
-    font-size: 12px;
-  }
-
-  .empty-flags {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--txt4);
-  }
-
-  .empty-flags i {
-    font-size: 48px;
-    margin-bottom: 16px;
-    display: block;
-  }
-
-  /* Back button */
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--txt3);
-    text-decoration: none;
-    font-size: 13px;
-    margin-bottom: 20px;
-    transition: color 0.15s;
-  }
-
-  .back-link:hover {
-    color: var(--gold);
-  }
-
-  /* Risk score styling */
-  .risk-critical { color: var(--critical); }
-  .risk-high     { color: var(--high); }
-  .risk-medium   { color: var(--med); }
-  .risk-low      { color: var(--low); }
+  /* Flag count badge */
+  .flag-count-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px;
+    background: var(--surface3); border-radius: 99px;
+    font-size: 10px; font-weight: 700;
+    color: var(--txt3); font-family: 'DM Mono', monospace;
+    margin-left: 4px;
+  } 
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="review-container">
-  <a href="/dashboard/" class="back-link">
+
+  <a href="/dashboard/" class="back-link" style="display:inline-flex;align-items:center;gap:6px;color:var(--txt3);text-decoration:none;font-size:13px;margin-bottom:20px;transition:color 0.15s;">
     <i class="ti ti-arrow-left"></i> Back to Dashboard
   </a>
 
@@ -281,118 +574,184 @@
       <h1>Contract <span>Review</span></h1>
       <div class="review-meta">
         <span><i class="ti ti-file-text"></i> {{ contract.title }}</span>
-        <span class="meta-dot">•</span>
-        <span><i class="ti ti-clock"></i> {{ contract.created_at|date:"F j, Y" }}</span>
-        {% if contract.page_count %}
-        <span class="meta-dot">•</span>
-        <span><i class="ti ti-pages"></i> {{ contract.page_count }} pages</span>
-        {% endif %}
+        <span>•</span>
+        <span><i class="ti ti-clock"></i> {{ contract.created_at|date:"M j, Y" }}</span>
+        {% if contract.page_count %}<span>•</span><span><i class="ti ti-book"></i> {{ contract.page_count }} pages</span>{% endif %}
       </div>
     </div>
     <div class="review-actions">
-      <button class="btn" onclick="window.print()">
-        <i class="ti ti-printer"></i> Print
+      <button class="btn" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+      <button class="btn btn-gold" id="reanalyze-btn" onclick="reanalyze()"><i class="ti ti-refresh"></i> Re-analyze</button>
+    </div>
+  </div>
+
+  <!-- Gauge + Stats -->
+  <div class="gauge-row">
+    <div class="gauge-card">
+      <div class="gauge-label">Overall Risk Score</div>
+      <div class="pill-gauge-wrap">
+        <div class="pill-gauge-number" id="gauge-number">0<span>/100</span></div>
+        <div class="pill-gauge-bar-wrap">
+          <div class="pill-gauge-bar" id="gauge-bar"></div>
+          <div class="pill-gauge-ticks">
+            <div class="pill-gauge-tick"></div>
+            <div class="pill-gauge-tick"></div>
+            <div class="pill-gauge-tick"></div>
+          </div>
+        </div>
+        <div class="pill-gauge-labels">
+          <span>0</span><span>Low</span><span>Med</span><span>High</span><span>100</span>
+        </div>
+      </div>
+      <div class="gauge-risk-pill risk-{{ contract.risk_score|default:'low' }}" id="gauge-risk-label">
+        {{ contract.risk_score|upper|default:"NOT ASSESSED" }}
+      </div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-item">
+        <span class="val">{{ flags|length }}</span>
+        <div class="lbl">Total Flags</div>
+      </div>
+      <div class="stat-item">
+        <span class="val val-high" id="count-high">0</span>
+        <div class="lbl">High Risk</div>
+      </div>
+      <div class="stat-item">
+        <span class="val val-medium" id="count-medium">0</span>
+        <div class="lbl">Medium Risk</div>
+      </div>
+      <div class="stat-item">
+        <span class="val val-low" id="count-low">0</span>
+        <div class="lbl">Low Risk</div>
+      </div>
+      <div class="stat-item">
+        <span class="val">{{ contract.page_count|default:"-" }}</span>
+        <div class="lbl">Pages</div>
+      </div>
+      <div class="stat-item">
+        <span class="val"><span class="status-chip status-{{ contract.status }}">{{ contract.get_status_display }}</span></span>
+        <div class="lbl">Status</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Re-analyze strip -->
+  <div class="reanalyze-strip">
+    <span><i class="ti ti-info-circle" style="margin-right:6px;"></i>Last analyzed {{ contract.created_at|date:"M j, Y \a\t g:i A" }}</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="reanalyze-status" style="font-size:12px;color:var(--txt4);"></span>
+      <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;" onclick="reanalyze()">
+        <i class="ti ti-refresh"></i> Run Analysis Again
       </button>
-      <a href="/dashboard/" class="btn btn-gold">
-        <i class="ti ti-dashboard"></i> Dashboard
-      </a>
     </div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Risk Score</div>
-      <div class="stat-value stat-risk risk-{{ contract.risk_score|default:'low' }}">
-        {{ contract.get_risk_score_display|default:"Not Assessed" }}
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Status</div>
-      <div class="stat-value">
-        <span class="status-chip status-{{ contract.status }}">{{ contract.get_status_display }}</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Total Pages</div>
-      <div class="stat-value">{{ contract.page_count|default:"-" }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Flags Found</div>
-      <div class="stat-value">{{ flags|length }}</div>
-    </div>
-  </div>
-
+  <!-- Main grid -->
   <div class="review-grid">
-    <!-- Left: Contract Text -->
-    <div class="contract-text-panel">
+
+    <!-- Left: Contract text -->
+    <div class="contract-panel">
       <div class="panel-header">
         <div class="panel-title">
           <i class="ti ti-file-description"></i> Full Contract Text
         </div>
-        <button class="btn btn-ghost" style="padding: 4px 12px; font-size: 11px;" onclick="copyText()">
-          <i class="ti ti-copy"></i> Copy
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="generating-badge" id="gen-badge" style="display:none;">
+            <span class="gen-dot"></span> Generating…
+          </span>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="toggleHighlights()" id="highlight-btn">
+            <i class="ti ti-eye"></i> Highlights
+          </button>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="copyText()">
+            <i class="ti ti-copy"></i> Copy
+          </button>
+        </div>
       </div>
-      <div class="contract-text" id="contract-text">{{ raw_text|default:"No text content available for this contract." }}</div>
+      <!-- Store raw text hidden, render formatted version here -->
+      <div class="contract-text" id="contract-text"></div>
+      <div id="raw-source" style="display:none;">{{ raw_text|default:"" }}</div>
     </div>
 
-    <!-- Right: Risk Flags -->
+    <!-- Right: Flags -->
     <div class="flags-panel">
-      <div class="panel-header">
-        <div class="panel-title">
-          <i class="ti ti-alert-triangle"></i> Risk Analysis
+      <div class="flags-header">
+        <div class="flags-title">
+          <i class="ti ti-alert-triangle" style="color:var(--gold);"></i> Risk Flags
+          <span class="flag-count-badge" id="visible-flag-count">{{ flags|length }}</span>
         </div>
-        <span class="status-chip status-{{ contract.status }}">{{ flags|length }} flags</span>
+        <div class="filter-pills">
+          <button class="pill active" onclick="filterFlags('all', this)">All</button>
+          <button class="pill pill-high" onclick="filterFlags('high', this)">High</button>
+          <button class="pill pill-medium" onclick="filterFlags('medium', this)">Medium</button>
+          <button class="pill pill-low" onclick="filterFlags('low', this)">Low</button>
+        </div>
       </div>
-      <div class="flags-list">
-        {% if flags %}
-          {% for flag in flags %}
-          <div class="flag-card">
-            {% if flag.redline %}
-<div class="flag-redline" style="
-  font-size: 11px;
-  color: var(--txt2);
-  padding: 8px;
-  margin-top: 8px;
-  background: rgba(201, 168, 76, 0.06);
-  border-radius: var(--radius-sm);
-  border-left: 2px solid var(--gold);
-  font-family: 'Geist', monospace;
-  line-height: 1.6;
-">
-  <i class="ti ti-pencil" style="margin-right: 6px; color: var(--gold);"></i>
-  <strong style="color: var(--gold); font-size: 10px; letter-spacing: 0.05em;">SUGGESTED REDLINE</strong><br>
-  {{ flag.redline }}
-</div>
-{% endif %}
-            <div class="flag-header">
-              <span class="flag-type">{{ flag.type|title }}</span>
+
+      <!-- Clause type filter -->
+      <div class="type-filter-wrap" id="type-filter-wrap" style="display:none;">
+        <span class="type-filter-label"><i class="ti ti-tag" style="margin-right:4px;"></i> Type</span>
+        <button class="type-pill active" onclick="filterByType('all', this)">All Types</button>
+      </div>
+
+      {% if flags %}
+        {% for flag in flags %}
+        <div class="flag-card" data-risk="{{ flag.risk }}" data-type="{{ flag.type }}" data-text="{{ flag.text|escapejs }}" onclick="handleCardClick(this, event)">
+          <div class="flag-card-header">
+            <div class="flag-type"><i class="ti ti-tag"></i>{{ flag.type|title }}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
               <span class="risk-badge risk-{{ flag.risk }}">{{ flag.risk|upper }}</span>
+              <i class="ti ti-chevron-down flag-toggle"></i>
             </div>
-            {% if flag.text %}
-            <div class="flag-text">
-              <i class="ti ti-quote" style="font-size: 10px; margin-right: 4px;"></i>
-              "{{ flag.text|truncatechars:200 }}"
+          </div>
+          <div class="flag-body">
+            {% if flag.text %}<div class="flag-excerpt">"{{ flag.text|truncatechars:180 }}"</div>{% endif %}
+            {% if flag.reason %}
+            <div class="flag-section-label lbl-reason"><i class="ti ti-info-circle"></i> Why it's risky</div>
+            <div class="flag-reason">{{ flag.reason }}</div>
+            {% endif %}
+            {% if flag.suggestion %}
+            <div class="flag-section-label lbl-suggestion" style="margin-top:8px;"><i class="ti ti-bulb"></i> Suggestion</div>
+            <div class="flag-suggestion">{{ flag.suggestion }}</div>
+            {% endif %}
+            {% if flag.redline %}
+            <div class="flag-section-label lbl-redline" style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
+              <span><i class="ti ti-pencil"></i> Suggested redline</span>
+              <div style="display:flex;gap:6px;">
+                <button class="accept-btn" id="accept-{{ forloop.counter }}" onclick="acceptRedline(event, '{{ flag.redline|escapejs }}', {{ forloop.counter }})">
+                  <i class="ti ti-check"></i> Accept & Copy
+                </button>
+                <button class="copy-btn" onclick="copyRedline(event, '{{ flag.redline|escapejs }}')"><i class="ti ti-copy"></i></button>
+              </div>
+            </div>
+            <div class="flag-redline">{{ flag.redline }}</div>
+
+            <!-- Diff view -->
+            <button class="diff-toggle-btn" onclick="toggleDiff(event, {{ forloop.counter }})">
+              <i class="ti ti-git-diff"></i> Show Diff
+            </button>
+            <div class="diff-view" id="diff-{{ forloop.counter }}">
+              <div class="diff-header">
+                <div class="diff-col-label original"><i class="ti ti-x" style="font-size:9px;margin-right:3px;"></i> Original</div>
+                <div class="diff-col-label suggested"><i class="ti ti-check" style="font-size:9px;margin-right:3px;"></i> Suggested</div>
+              </div>
+              <div class="diff-body">
+                <div class="diff-original">{{ flag.text|default:flag.text|truncatechars:300 }}</div>
+                <div class="diff-suggested">{{ flag.redline }}</div>
+              </div>
             </div>
             {% endif %}
-            <div class="flag-reason">
-              <i class="ti ti-info-circle"></i>
-              {{ flag.reason|default:"No specific reason provided." }}
-            </div>
-            <div class="flag-suggestion">
-              <i class="ti ti-bulb"></i>
-              {{ flag.suggestion|default:"No suggestion available." }}
-            </div>
           </div>
-          {% endfor %}
-        {% else %}
-          <div class="empty-flags">
-            <i class="ti ti-check-circle"></i>
-            <div>No risk flags detected</div>
-            <div style="font-size: 12px; margin-top: 8px;">This contract appears to be clean and well-structured.</div>
-          </div>
-        {% endif %}
-      </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-flags">
+          <i class="ti ti-circle-check"></i>
+          <div style="font-size:15px;font-weight:600;margin-bottom:8px;">No flags detected</div>
+          <div style="font-size:12px;">Run the analysis to detect risky clauses.</div>
+          <button class="btn btn-gold" style="margin-top:16px;" onclick="reanalyze()"><i class="ti ti-refresh"></i> Run Analysis</button>
+        </div>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -400,16 +759,397 @@
 
 {% block extra_js %}
 <script>
-  function copyText() {
-    const text = document.getElementById('contract-text').innerText;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = event.target.closest('button');
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<i class="ti ti-check"></i> Copied!';
-      setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
-    }).catch(err => {
-      console.error('Failed to copy:', err);
+  // ── Django data ───────────────────────────────────────────
+  const CONTRACT_ID = {{ contract.id }};
+  const RISK_LABEL  = "{{ contract.risk_score|default:'low' }}";
+  let   RISK_VALUE  = {{ contract.risk_score_value|default:0 }};
+
+  const FLAGS = [
+    {% for flag in flags %}{ risk: "{{ flag.risk }}", text: "{{ flag.text|escapejs }}" },{% endfor %}
+  ];
+
+  // ── Compute risk score from flags if DB value is 0 ───────
+  function computeRiskScore() {
+    if (RISK_VALUE > 0) return RISK_VALUE;
+    if (FLAGS.length === 0) return 0;
+    const weights = { high: 80, critical: 100, medium: 45, low: 15 };
+    const total   = FLAGS.reduce((sum, f) => sum + (weights[f.risk] || 20), 0);
+    // Cap at 95, average weighted
+    return Math.min(95, Math.round(total / FLAGS.length));
+  }
+
+  // ── Pill Gauge ────────────────────────────────────────────
+  function animateGauge() {
+    const bar   = document.getElementById('gauge-bar');
+    const numEl = document.getElementById('gauge-number');
+    const score = computeRiskScore();
+
+    // Determine display label from score if not set
+    let label = RISK_LABEL;
+    if (!label || label === 'low') {
+      if (score >= 70)      label = 'high';
+      else if (score >= 40) label = 'medium';
+      else                  label = 'low';
+    }
+
+    // Update pill label text and class
+    const pill = document.getElementById('gauge-risk-label');
+    if (pill) {
+      pill.className = `gauge-risk-pill risk-${label}`;
+      pill.textContent = label.toUpperCase();
+    }
+
+    const colors = { low: '#3dd68c', medium: '#ffc107', high: '#ff6b6b', critical: '#ff3b30' };
+    const color  = colors[label] || '#c9a84c';
+    bar.style.background = `linear-gradient(90deg, ${color}88, ${color})`;
+
+    setTimeout(() => { bar.style.width = score + '%'; }, 300);
+
+    let current = 0;
+    const step  = score / 60;
+    const timer = setInterval(() => {
+      current = Math.min(current + step, score);
+      numEl.innerHTML = `${Math.round(current)}<span>/100</span>`;
+      if (current >= score) clearInterval(timer);
+    }, 16);
+  }
+
+  // ── Count flags ───────────────────────────────────────────
+  function updateCounts() {
+    document.getElementById('count-high').textContent   = FLAGS.filter(f => f.risk === 'high' || f.risk === 'critical').length;
+    document.getElementById('count-medium').textContent = FLAGS.filter(f => f.risk === 'medium').length;
+    document.getElementById('count-low').textContent    = FLAGS.filter(f => f.risk === 'low').length;
+  }
+
+  // ── Tokenize inline content ───────────────────────────────
+  function tokenizeLine(text) {
+    // Party names
+    text = text.replace(/\b(SMPCL|HETRAM|LESSOR|LESSEE|CONTRACTOR|SHWETDHARA|KRISHANACHAND|COMPANY LIMITED|FIRST PARTY|SECOND PARTY)\b/gi,
+      '<span class="ct-party">$&</span>');
+    // Dates
+    text = text.replace(/\b(\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}|\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December),?\s*\d{4})\b/gi,
+      '<span class="ct-date">$&</span>');
+    // Amounts
+    text = text.replace(/(Rs\.?\s*[\d,]+(?:\/\-)?|INR\s*[\d,]+|₹\s*[\d,]+)/gi,
+      '<span class="ct-amount">$&</span>');
+    // Legal keywords
+    text = text.replace(/\b(WHEREAS|AND WHEREAS|NOW THEREFORE|WITNESSETH|HEREINAFTER|HEREOF|THEREOF)\b/g,
+      '<span class="ct-legal">$&</span>');
+    return text;
+  }
+
+  // ── Build formatted HTML from raw text ───────────────────
+  function buildFormattedHTML(raw) {
+    const lines = raw.split('\n');
+    let html    = '';
+    let clauseBuffer = null;
+
+    const SECTION_ICONS = {
+      'WHEREAS': '📋', 'AGREEMENT': '📄', 'PARTIES': '👥',
+      'PAYMENT': '💳', 'TERMINATION': '🚫', 'LIABILITY': '⚖️',
+      'INDEMNIF': '🛡️', 'CONFIDENTIAL': '🔒', 'GOVERNING': '🏛️',
+      'DEFAULT': '⚡', 'NOTICE': '📬', 'GENERAL': '📝',
+      'WITNESSETH': '✍️', 'NOW THEREFORE': '📌',
+    };
+
+    function getSectionIcon(text) {
+      const up = text.toUpperCase();
+      for (const [k, v] of Object.entries(SECTION_ICONS)) {
+        if (up.includes(k)) return v;
+      }
+      return '§';
+    }
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) { html += '<br>'; return; }
+
+      // ALL-CAPS section heading
+      if (/^[A-Z][A-Z\s\-:\.]{5,}$/.test(trimmed) && trimmed.length < 80) {
+        html += `
+          <div class="ct-section">
+            <div class="ct-section-icon">${getSectionIcon(trimmed)}</div>
+            <div class="ct-section-title">${trimmed}</div>
+          </div>`;
+        return;
+      }
+
+      // Numbered clause line: starts with digit + . or )
+      const clauseMatch = trimmed.match(/^(\d{1,2}[\.\)])\s+(.*)/);
+      if (clauseMatch) {
+        const num  = clauseMatch[1];
+        const rest = tokenizeLine(clauseMatch[2]);
+        html += `
+          <div class="ct-clause">
+            <span class="ct-clause-pill">§ ${num}</span>
+            <span class="ct-clause-text">${rest}</span>
+          </div>`;
+        return;
+      }
+
+      // WHEREAS / recital line
+      if (/^(WHEREAS|AND WHEREAS|A\.|B\.|C\.)/i.test(trimmed)) {
+        html += `<span class="ct-whereas">${tokenizeLine(trimmed)}</span>`;
+        return;
+      }
+
+      // Plain paragraph
+      html += `<span class="ct-para">${tokenizeLine(line)}</span>`;
+    });
+
+    return html;
+  }
+
+  // ── Typewriter renderer ───────────────────────────────────
+  async function typewriterRender(html) {
+    const container = document.getElementById('contract-text');
+    const badge     = document.getElementById('gen-badge');
+    badge.style.display = 'inline-flex';
+
+    // Parse html into a temp div
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const nodes = Array.from(temp.childNodes);
+
+    container.innerHTML = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'ct-cursor';
+    container.appendChild(cursor);
+
+    for (const node of nodes) {
+      const clone = node.cloneNode(true);
+      container.insertBefore(clone, cursor);
+
+      // Scroll to keep cursor visible
+      cursor.scrollIntoView({ block: 'nearest' });
+
+      // Delay per node type — block elements pause longer
+      const tag = clone.nodeName.toLowerCase();
+      if (['div','span'].includes(tag) && clone.classList && clone.classList.contains('ct-section')) {
+        await sleep(60);
+      } else if (clone.classList && clone.classList.contains('ct-clause')) {
+        await sleep(30);
+      } else if (tag === 'br') {
+        await sleep(8);
+      } else {
+        await sleep(18);
+      }
+    }
+
+    // Remove cursor when done
+    cursor.remove();
+    badge.style.display = 'none';
+
+    // Now apply highlights
+    applyHighlights();
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // ── Apply risk highlights via TreeWalker ──────────────────
+  function applyHighlights() {
+    const container = document.getElementById('contract-text');
+    FLAGS.forEach((flag, i) => {
+      if (!flag.text || flag.text.length < 10) return;
+      const searchStr = flag.text.substring(0, 50).toLowerCase();
+      try {
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+        const nodes  = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+
+        for (const node of nodes) {
+          const idx = node.textContent.toLowerCase().indexOf(searchStr);
+          if (idx === -1) continue;
+          const span  = document.createElement('span');
+          span.className = `highlight-${flag.risk}`;
+          span.dataset.flag = i;
+          span.onclick = () => scrollToFlag(i);
+          span.title   = `${flag.risk.toUpperCase()} risk — click to view flag`;
+          const range  = document.createRange();
+          range.setStart(node, idx);
+          range.setEnd(node, Math.min(idx + flag.text.length, node.textContent.length));
+          try { range.surroundContents(span); } catch(e) {}
+          break; // one highlight per flag
+        }
+      } catch(e) {}
     });
   }
+
+  let highlightsOn = true;
+  function toggleHighlights() {
+    highlightsOn = !highlightsOn;
+    const btn = document.getElementById('highlight-btn');
+    document.querySelectorAll('[class^="highlight-"]').forEach(el => {
+      el.style.opacity      = highlightsOn ? '1' : '0';
+      el.style.borderBottom = highlightsOn ? '' : 'none';
+    });
+    btn.innerHTML = highlightsOn
+      ? '<i class="ti ti-eye"></i> Highlights'
+      : '<i class="ti ti-eye-off"></i> Hidden';
+  }
+
+  // ── Scroll helpers ────────────────────────────────────────
+  function scrollToHighlight(idx) {
+    const container = document.getElementById('contract-text');
+    const span = container.querySelector(`[data-flag="${idx}"]`);
+    if (!span) return;
+    container.querySelectorAll('.highlight-active').forEach(el => el.classList.remove('highlight-active'));
+    span.classList.add('highlight-active');
+    span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function handleCardClick(card, event) {
+    if (event.target.closest('.copy-btn')) return;
+    const cards = document.querySelectorAll('.flag-card');
+    const index = Array.from(cards).indexOf(card);
+    card.classList.toggle('collapsed');
+    card.classList.toggle('active-card', !card.classList.contains('collapsed'));
+    scrollToHighlight(index);
+  }
+
+  function scrollToFlag(idx) {
+    const cards = document.querySelectorAll('.flag-card');
+    if (cards[idx]) {
+      cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      cards[idx].classList.add('active-card');
+    }
+  }
+
+  let activeRisk = 'all';
+  let activeType = 'all';
+
+  function filterFlags(level, btn) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    activeRisk = level;
+    applyFilters();
+  }
+
+  function filterByType(type, btn) {
+    document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    activeType = type;
+    applyFilters();
+  }
+
+  function applyFilters() {
+    let visible = 0;
+    document.querySelectorAll('.flag-card').forEach(card => {
+      const matchRisk = activeRisk === 'all' || card.dataset.risk === activeRisk;
+      const matchType = activeType === 'all' || card.dataset.type === activeType;
+      const show = matchRisk && matchType;
+      card.style.display = show ? 'block' : 'none';
+      if (show) visible++;
+    });
+    const badge = document.getElementById('visible-flag-count');
+    if (badge) badge.textContent = visible;
+  }
+
+  function buildTypeFilter() {
+    const wrap = document.getElementById('type-filter-wrap');
+    if (!wrap) return;
+    const types = new Set();
+    document.querySelectorAll('.flag-card').forEach(card => {
+      if (card.dataset.type) types.add(card.dataset.type);
+    });
+    if (types.size <= 1) return;
+    wrap.style.display = 'flex';
+    types.forEach(type => {
+      const btn = document.createElement('button');
+      btn.className   = 'type-pill';
+      btn.textContent = type;
+      btn.onclick = function() { filterByType(type, this); };
+      wrap.appendChild(btn);
+    });
+  }
+
+  // ── Copy ──────────────────────────────────────────────────
+  function copyText() {
+    const text = document.getElementById('contract-text').innerText;
+    navigator.clipboard.writeText(text).then(() => showToast('Copied!'));
+  }
+  function toggleDiff(event, idx) {
+    event.stopPropagation();
+    const diff = document.getElementById(`diff-${idx}`);
+    const btn  = event.currentTarget;
+    if (!diff) return;
+    const open = diff.classList.toggle('open');
+    btn.innerHTML = open
+      ? '<i class="ti ti-git-diff"></i> Hide Diff'
+      : '<i class="ti ti-git-diff"></i> Show Diff';
+  }
+
+  function acceptRedline(event, text, idx) {
+    event.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(`accept-${idx}`);
+      if (!btn) return;
+      btn.classList.add('accepted');
+      btn.innerHTML = '<i class="ti ti-check"></i> Copied!';
+      setTimeout(() => {
+        btn.classList.remove('accepted');
+        btn.innerHTML = '<i class="ti ti-check"></i> Accept & Copy';
+      }, 2500);
+    });
+  }
+
+  function copyRedline(event, text) {
+    event.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target.closest('.copy-btn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="ti ti-check"></i> Copied';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);padding:10px 18px;border-radius:8px;font-size:13px;color:var(--txt);z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.12);';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+
+  // ── Re-analyze ────────────────────────────────────────────
+  async function reanalyze() {
+    const btn    = document.getElementById('reanalyze-btn');
+    const status = document.getElementById('reanalyze-status');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="ti ti-loader-2 ti-spin"></i> Analyzing...';
+    status.textContent = 'Running AI analysis...';
+    try {
+      const token = localStorage.getItem('access_token') || '';
+      const res   = await fetch(`/api/contracts/${CONTRACT_ID}/analyze/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: '{}',
+      });
+      const data = await res.json();
+      if (data.success) {
+        status.textContent = `Found ${data.total_flags} flags — reloading...`;
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        status.textContent = `Error: ${data.error}`;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-refresh"></i> Re-analyze';
+      }
+    } catch(e) {
+      status.textContent = 'Network error.';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-refresh"></i> Re-analyze';
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', async () => {
+    animateGauge();
+    updateCounts();
+
+    const raw  = document.getElementById('raw-source').textContent;
+    const html = buildFormattedHTML(raw);
+    await typewriterRender(html);
+    buildTypeFilter();
+  });
 </script>
 {% endblock %}
