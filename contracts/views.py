@@ -13,8 +13,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
-
-from .models import Contract
+from .models import *
 from .serializers import ContractSerializer
 
 
@@ -636,3 +635,111 @@ class BulkDeleteAPIView(APIView):
             'deleted': deleted,
             'message': f'{len(deleted)} contract(s) deleted.',
         })
+        
+# ── API: Chat with a contract ────────────────────────────────
+class ContractChatAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from .models import ChatSession, ChatMessage
+        from .utils.chat_agent import run_chat_agent
+
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+        question = request.data.get('message', '').strip()
+
+        if not question:
+            return Response({
+                'success': False,
+                'error':   'message is required.',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if not contract.raw_text:
+            return Response({
+                'success': False,
+                'error':   'Contract has no text. Process the contract first.',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # ── Get or create session for this contract + user ───
+        session, _ = ChatSession.objects.get_or_create(
+            contract = contract,
+            user     = request.user,
+        )
+
+        # ── Build history: last 10 messages ─────────────────
+        recent = session.messages.order_by('-created_at')[:10]
+        history = [
+            {'role': m.role, 'content': m.content}
+            for m in reversed(recent)
+        ]
+
+        # ── Save user message ────────────────────────────────
+        ChatMessage.objects.create(
+            session = session,
+            role    = 'user',
+            content = question,
+        )
+
+        # ── Run chat agent ───────────────────────────────────
+        result = run_chat_agent(contract.id, question, history)
+
+        if not result['success']:
+            return Response({
+                'success': False,
+                'error':   result['error'],
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # ── Save assistant message ───────────────────────────
+        ChatMessage.objects.create(
+            session   = session,
+            role      = 'assistant',
+            content   = result['answer'],
+            citations = result['citations'],
+        )
+
+        return Response({
+            'success':    True,
+            'answer':     result['answer'],
+            'citations':  result['citations'],
+            'session_id': session.id,
+        })
+
+    def get(self, request, pk):
+        """Return full chat history for a contract."""
+        from .models import ChatSession, ChatMessage
+
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+
+        try:
+            session  = ChatSession.objects.get(contract=contract, user=request.user)
+            messages = session.messages.order_by('created_at')
+            history  = [
+                {
+                    'role':       m.role,
+                    'content':    m.content,
+                    'citations':  m.citations,
+                    'created_at': m.created_at,
+                }
+                for m in messages
+            ]
+        except ChatSession.DoesNotExist:
+            history = []
+
+        return Response({
+            'success':  True,
+            'history':  history,
+            'count':    len(history),
+        })
+
+    def delete(self, request, pk):
+        """Clear chat history for a contract."""
+        from .models import ChatSession
+
+        contract = get_object_or_404(Contract, pk=pk, user=request.user)
+
+        try:
+            session = ChatSession.objects.get(contract=contract, user=request.user)
+            session.messages.all().delete()
+        except ChatSession.DoesNotExist:
+            pass
+
+        return Response({'success': True, 'message': 'Chat history cleared.'})
