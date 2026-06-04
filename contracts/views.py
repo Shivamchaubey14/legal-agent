@@ -72,27 +72,23 @@ class ContractUploadAPIView(APIView):
     parser_classes     = [MultiPartParser, FormParser]
 
     def post(self, request):
+        from .serializers import ContractUploadSerializer
+
+        # ── Validate via serializer ──────────────────────────
+        upload_serializer = ContractUploadSerializer(data={
+            'file':  request.FILES.get('file'),
+            'title': request.data.get('title', ''),
+        })
+        if not upload_serializer.is_valid():
+            # Return first error message cleanly
+            errors = upload_serializer.errors
+            first_error = next(iter(errors.values()))[0]
+            return Response({
+                'success': False,
+                'error':   str(first_error),
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         file = request.FILES.get('file')
-
-        # ── Validation ───────────────────────────────────────
-        if not file:
-            return Response({
-                'success': False,
-                'error':   'No file provided.',
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        ext = os.path.splitext(file.name)[1].lower()
-        if ext not in ALLOWED_EXTENSIONS:
-            return Response({
-                'success': False,
-                'error':   'Only PDF and DOCX files are allowed.',
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        if file.size > MAX_FILE_SIZE_B:
-            return Response({
-                'success': False,
-                'error':   f'File too large. Maximum size is {MAX_FILE_SIZE_MB}MB.',
-            }, status=status.HTTP_400_BAD_REQUEST)
 
         # ── Save file to media/contracts/<user_id>/ ──────────
         title     = request.data.get('title', '').strip()
