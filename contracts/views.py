@@ -47,6 +47,11 @@ def dashboard(request):
 def upload_page(request):
     return render(request, 'upload.html')
 
+@login_required
+def contract_processing_page(request, pk):
+    contract = get_object_or_404(Contract, pk=pk, user=request.user)
+    return render(request, 'processing.html', {'contract': contract})
+
 
 # ── API: List contracts ──────────────────────────────────────
 class ContractListAPIView(APIView):
@@ -148,11 +153,11 @@ class ContractUploadAPIView(APIView):
                 contract.save()
 
         return Response({
-            'success':  True,
-            'message':  'Contract uploaded and parsed successfully.',
-            'contract': ContractSerializer(contract).data,
-            'redirect': '/dashboard/',
-        }, status=status.HTTP_201_CREATED)
+    'success':  True,
+    'message':  'Contract uploaded and parsed successfully.',
+    'contract': ContractSerializer(contract).data,
+    'redirect': f'/contracts/{contract.id}/processing/',
+}, status=status.HTTP_201_CREATED)
 
 
 # ── API: Contract detail + delete ───────────────────────────

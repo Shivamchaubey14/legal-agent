@@ -7,6 +7,7 @@ urlpatterns = [
     path('dashboard/',  views.dashboard,   name='dashboard'),
     path('upload/',     views.upload_page, name='upload'),
     path('contracts/<int:pk>/review/', views.contract_review_page, name='contract_review_page'),
+    path('contracts/<int:pk>/processing/', views.contract_processing_page, name='contract_processing'),         
 
     # ── API: no-pk endpoints FIRST ───────────────────────────
     path('api/contracts/',
