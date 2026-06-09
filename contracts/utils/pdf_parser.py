@@ -311,7 +311,7 @@ class ContractParser:
 
             doc.close()
             full_text = '\n\n'.join(pages).strip()
-            return {'text': full_text, 'page_count': page_count, 'method': 'ocr', 'error': None}
+            return {'text': full_text, 'page_count': page_count, 'method': 'ocr', 'error': None} 
 
         except MemoryError:
             logger.error('OCR failed: out of memory — file may be too large')

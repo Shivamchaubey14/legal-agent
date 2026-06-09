@@ -318,6 +318,7 @@
   .step-row { flex-direction: column; gap: 10px; }
   .step-num { font-size: 36px; width: auto; }
 }
+
 /* ── Scroll reveal ── */
 .reveal {
   opacity: 0;
@@ -644,6 +645,7 @@
     <div class="stat-l">Cited Answers</div>
   </div>
 </div>
+
 <!-- ── Clause types ── -->
 <div class="clause-types-strip">
   <div class="clause-types-inner">
@@ -667,9 +669,6 @@
 
 <!-- ── Features ── -->
 <section class="features-section">
-
-<!-- ── Features ── -->
-<section class="features-section">
   <div class="section-head">
     <div class="section-eyebrow">What LexAI does</div>
     <h2 class="section-title">Everything a first-pass review needs,<br/><em>automated</em></h2>
@@ -682,7 +681,7 @@
       <div class="feature-title">Autonomous Clause Detection</div>
       <div class="feature-desc">LangGraph agent reads every chunk of your contract and flags Termination, Liability, IP, Payment, Confidentiality, Non-compete, and Governing Law clauses automatically.</div>
     </div>
-    <div class="feature-card reveal reaveal-delay-1">
+    <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon"><i class="ti ti-gauge"></i></div>
       <div class="feature-title">Risk Scoring</div>
       <div class="feature-desc">Each clause gets a Low / Medium / High risk level. A weighted formula produces an overall contract score: Low, Medium, High, or Critical.</div>
@@ -745,6 +744,7 @@
     </div>
   </div>
 </section>
+
 <!-- ── Social proof ── -->
 <section class="social-proof">
   <div class="social-proof-inner">
@@ -783,9 +783,6 @@
 
 <!-- ── CTA Band ── -->
 <section class="cta-band">
-
-<!-- ── CTA Band ── -->
-<section class="cta-band">
   <h2 class="cta-title">Ready to review your<br/><em>first contract?</em></h2>
   <p class="cta-sub">Free to try. No credit card required. Results in seconds.</p>
   <a href="/auth/register/" class="btn btn-hero-primary">
@@ -799,6 +796,8 @@
   <div class="footer-brand">Lex<span>AI</span></div>
   <div class="footer-copy">© 2025 · Built with Django · Claude Sonnet · LangGraph</div>
 </footer>
+
+{% endblock content %}
 
 {% block extra_js %}
 <script>
@@ -829,7 +828,6 @@
     entries.forEach(e => {
       if (!e.isIntersecting) return;
       const nums = e.target.querySelectorAll('.stat-n');
-      // Only animate numeric-only ones
       nums.forEach(n => {
         const raw = n.textContent.replace(/[^0-9]/g, '');
         if (raw) animateCounter(n, parseInt(raw), n.textContent.replace(/[0-9]/g, ''));
@@ -841,4 +839,4 @@
   const strip = document.querySelector('.stats-strip');
   if (strip) statsObserver.observe(strip);
 </script>
-{% endblock %}
+{% endblock extra_js %}

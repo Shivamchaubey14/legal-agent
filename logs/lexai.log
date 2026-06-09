@@ -1,0 +1,348 @@
+[INFO] 2026-06-04 17:17:32,877 embedder — Loading embedding model: all-MiniLM-L6-v2
+[INFO] 2026-06-04 17:17:34,164 agent — Stripped 1443 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-04 17:17:49,654 embedder — Embedding model loaded.
+[INFO] 2026-06-04 17:18:08,330 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-04 17:21:49,340 embedder — Loading embedding model: all-MiniLM-L6-v2
+[INFO] 2026-06-04 17:21:56,030 embedder — Embedding model loaded.
+[INFO] 2026-06-04 17:25:01,338 agent — Stripped 1004 chars at marker: "WHEREAS the Lessor"
+[INFO] 2026-06-04 17:25:46,077 risk_scorer — Contract 8 risk: 38/100 (medium) — 0H 4M 4L across 8 flags
+[INFO] 2026-06-05 09:38:48,485 agent — Stripped 1443 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-05 09:49:03,161 agent — Stripped 1443 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-05 09:52:50,239 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-05 10:01:29,000 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-05 10:01:38,602 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-05 10:02:11,544 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-05 10:04:25,895 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-05 10:04:42,469 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-05 10:46:29,151 agent — Stripped 1443 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-05 10:46:29,156 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-05 10:46:54,984 risk_scorer — Contract 13 risk: 55/100 (high) — 1H 6M 2L across 9 flags
+[INFO] 2026-06-05 10:47:25,667 agent — Stripped 1443 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-05 10:56:03,287 views — Queued contract 14 for async processing
+[DEBUG] 2026-06-05 10:56:03,288 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-05 10:56:05,515 tasks — Starting pipeline for contract 14: SH298 Appointment
+[INFO] 2026-06-05 10:56:05,525 tasks — [14] Step 1: Parsing file
+[INFO] 2026-06-05 10:56:06,255 tasks — [14] Parsed via pymupdf — 4 pages, 7324 chars
+[INFO] 2026-06-05 10:56:06,255 tasks — [14] Step 2: Embedding chunks
+[INFO] 2026-06-05 10:56:16,003 embedder — Loading embedding model: all-MiniLM-L6-v2
+[INFO] 2026-06-05 10:56:22,682 embedder — Embedding model loaded.
+[INFO] 2026-06-05 10:56:23,334 embedder — Embedded contract 14: 3 chunks stored.
+[INFO] 2026-06-05 10:56:23,334 tasks — [14] Embedded 3 chunks
+[INFO] 2026-06-05 10:56:23,334 tasks — [14] Step 3: Running clause detection agent
+[INFO] 2026-06-05 10:56:24,955 agent — Starting clause detection for contract 14
+[INFO] 2026-06-05 10:56:24,957 agent — Analyzing chunk 1/2
+[INFO] 2026-06-05 10:56:27,912 agent — Chunk 0: found 4 flags
+[INFO] 2026-06-05 10:56:48,102 agent — Analyzing chunk 2/2
+[INFO] 2026-06-05 10:57:02,203 agent — Chunk 1: found 4 flags
+[INFO] 2026-06-05 10:57:40,501 agent — Contract 14 analysis complete: 8 flags across 2 chunks
+[INFO] 2026-06-05 10:57:40,554 clause_saver — Saved 8 clause flags for contract 14
+[INFO] 2026-06-05 10:57:40,554 tasks — [14] Saved 8 clause flags
+[INFO] 2026-06-05 10:57:40,555 tasks — [14] Step 4: Computing risk score
+[INFO] 2026-06-05 10:57:40,559 risk_scorer — Contract 14 risk: 42/100 (medium) — 0H 5M 3L across 8 flags
+[INFO] 2026-06-05 10:57:40,564 risk_scorer — Contract 14 finalised: medium (42/100)
+[INFO] 2026-06-05 10:57:40,564 tasks — [14] Risk score: medium (42/100) — 0H 5M 3L
+[INFO] 2026-06-05 10:57:40,564 tasks — [14] Pipeline complete.
+[DEBUG] 2026-06-05 10:57:40,835 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-05 11:10:52,614 agent — Stripped 118 chars at marker: "THIS AGREEMENT"
+[DEBUG] 2026-06-05 11:11:11,766 cache — Cache MISS chat  contract=9
+[INFO] 2026-06-05 11:11:12,028 embedder — Loading embedding model: all-MiniLM-L6-v2
+[INFO] 2026-06-05 11:11:21,767 embedder — Embedding model loaded.
+[DEBUG] 2026-06-05 11:11:25,256 cache — Cache SET  chat  contract=9  ttl=14400s
+[DEBUG] 2026-06-05 11:11:49,729 cache — Cache MISS chat  contract=9
+[DEBUG] 2026-06-05 11:11:51,602 cache — Cache SET  chat  contract=9  ttl=14400s
+[INFO] 2026-06-05 11:19:58,923 agent — Stripped 118 chars at marker: "THIS AGREEMENT"
+[INFO] 2026-06-05 12:58:21,839 agent — Stripped 1443 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-05 12:58:56,791 agent — Stripped 1004 chars at marker: "WHEREAS the Lessor"
+[DEBUG] 2026-06-05 12:59:44,232 cache — Cache MISS chat  contract=8
+[DEBUG] 2026-06-05 12:59:46,890 cache — Cache SET  chat  contract=8  ttl=14400s
+[DEBUG] 2026-06-05 13:00:31,465 cache — Cache MISS chat  contract=8
+[DEBUG] 2026-06-05 13:00:32,474 cache — Cache SET  chat  contract=8  ttl=14400s
+[INFO] 2026-06-05 13:51:18,076 agent — Stripped 1004 chars at marker: "WHEREAS the Lessor"
+[INFO] 2026-06-05 13:52:07,428 risk_scorer — Contract 14 risk: 42/100 (medium) — 0H 5M 3L across 8 flags
+[INFO] 2026-06-06 09:48:42,870 embedder — Deleted embeddings for contract 14
+[DEBUG] 2026-06-06 09:48:42,938 cache — Cache DEL  skipped (not using django-redis)
+[DEBUG] 2026-06-06 09:48:43,635 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-06 09:49:11,595 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-06 09:51:42,920 agent — Stripped 2644 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-06 10:34:16,807 views — Queued contract 15 for async processing
+[DEBUG] 2026-06-06 10:34:16,814 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-06 10:34:17,014 tasks — Starting pipeline for contract 15: Pramod
+[INFO] 2026-06-06 10:34:17,035 tasks — [15] Step 1: Parsing file
+[INFO] 2026-06-06 10:34:26,338 pdf_parser — OCR page 1/9: 1770 chars
+[INFO] 2026-06-06 10:34:32,466 pdf_parser — OCR page 2/9: 2219 chars
+[INFO] 2026-06-06 10:34:37,769 pdf_parser — OCR page 3/9: 2099 chars
+[INFO] 2026-06-06 10:34:43,022 pdf_parser — OCR page 4/9: 2391 chars
+[INFO] 2026-06-06 10:34:48,170 pdf_parser — OCR page 5/9: 2520 chars
+[INFO] 2026-06-06 10:34:52,661 pdf_parser — OCR page 6/9: 1367 chars
+[INFO] 2026-06-06 10:34:59,403 pdf_parser — OCR page 7/9: 1671 chars
+[INFO] 2026-06-06 10:35:16,434 pdf_parser — OCR page 8/9: 8653 chars
+[INFO] 2026-06-06 10:35:24,918 pdf_parser — OCR page 9/9: 3538 chars
+[INFO] 2026-06-06 10:35:24,951 pdf_parser — Stripped 3320 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-06 10:35:24,961 tasks — [15] Parsed via ocr — 9 pages, 22903 chars
+[INFO] 2026-06-06 10:35:24,961 tasks — [15] Step 2: Embedding chunks
+[INFO] 2026-06-06 10:35:27,028 embedder — Embedded contract 15: 14 chunks stored.
+[INFO] 2026-06-06 10:35:27,028 tasks — [15] Embedded 14 chunks
+[INFO] 2026-06-06 10:35:27,029 tasks — [15] Step 3: Running clause detection agent
+[INFO] 2026-06-06 10:35:27,030 agent — Starting clause detection for contract 15
+[INFO] 2026-06-06 10:35:27,040 agent — Analyzing chunk 1/12
+[ERROR] 2026-06-06 10:35:28,512 agent — JSON parse error on chunk 0: Expecting ',' delimiter: line 20 column 90 (char 1677)
+[INFO] 2026-06-06 10:35:28,512 agent — Analyzing chunk 2/12
+[INFO] 2026-06-06 10:35:33,850 agent — Chunk 1: found 4 flags
+[INFO] 2026-06-06 10:36:09,494 agent — Analyzing chunk 3/12
+[INFO] 2026-06-06 10:36:25,327 agent — Chunk 2: found 5 flags
+[INFO] 2026-06-06 10:37:05,483 agent — Analyzing chunk 4/12
+[INFO] 2026-06-06 10:37:22,032 agent — Chunk 3: found 4 flags
+[INFO] 2026-06-06 10:37:54,967 agent — Analyzing chunk 5/12
+[INFO] 2026-06-06 10:38:09,348 agent — Chunk 4: found 0 flags
+[INFO] 2026-06-06 10:38:09,349 agent — Analyzing chunk 6/12
+[INFO] 2026-06-06 10:38:20,218 agent — Chunk 5: found 3 flags
+[INFO] 2026-06-06 10:38:43,047 agent — Analyzing chunk 7/12
+[INFO] 2026-06-06 10:38:58,962 agent — Chunk 6: found 3 flags
+[INFO] 2026-06-06 10:39:36,698 agent — Analyzing chunk 8/12
+[INFO] 2026-06-06 10:39:50,584 agent — Chunk 7: found 3 flags
+[INFO] 2026-06-06 10:40:15,923 agent — Analyzing chunk 9/12
+[INFO] 2026-06-06 10:40:28,703 agent — Chunk 8: found 3 flags
+[INFO] 2026-06-06 10:40:29,992 agent — Starting clause detection for contract 15
+[INFO] 2026-06-06 10:40:30,018 agent — Analyzing chunk 1/12
+[INFO] 2026-06-06 10:41:07,215 agent — Analyzing chunk 10/12
+[INFO] 2026-06-06 10:41:08,624 agent — Chunk 9: found 3 flags
+[INFO] 2026-06-06 10:41:43,299 agent — Analyzing chunk 11/12
+[INFO] 2026-06-06 10:41:52,271 agent — Chunk 10: found 3 flags
+[INFO] 2026-06-06 10:42:19,716 agent — Analyzing chunk 12/12
+[WARNING] 2026-06-06 10:42:22,203 agent — API error (attempt 1/3), retrying in 1.0s: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.1-8b-instant` in organization `org_01ks5588c2fhtrsve8qgggtzv4` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Used 5472, Requested 1550. Please try again in 10.22s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+[INFO] 2026-06-06 10:42:28,980 agent — Chunk 11: found 0 flags
+[INFO] 2026-06-06 10:42:28,983 agent — Contract 15 analysis complete: 31 flags across 12 chunks
+[INFO] 2026-06-06 10:42:29,609 clause_saver — Saved 31 clause flags for contract 15
+[INFO] 2026-06-06 10:42:29,610 tasks — [15] Saved 31 clause flags
+[INFO] 2026-06-06 10:42:29,610 tasks — [15] Step 4: Computing risk score
+[INFO] 2026-06-06 10:42:29,642 risk_scorer — Contract 15 risk: 41/100 (medium) — 3H 14M 14L across 31 flags
+[INFO] 2026-06-06 10:42:29,658 risk_scorer — Contract 15 finalised: medium (41/100)
+[INFO] 2026-06-06 10:42:29,659 tasks — [15] Risk score: medium (41/100) — 3H 14M 14L
+[INFO] 2026-06-06 10:42:29,659 tasks — [15] Pipeline complete.
+[INFO] 2026-06-06 10:42:37,506 agent — Chunk 0: found 4 flags
+[DEBUG] 2026-06-06 10:43:02,744 cache — Cache MISS chat  contract=15
+[ERROR] 2026-06-06 10:43:02,829 embedder — Query failed for contract 15: Error executing plan: Internal error: Error finding id
+[DEBUG] 2026-06-06 10:43:03,137 cache — Cache SET  chat  contract=15  ttl=14400s
+[INFO] 2026-06-06 10:43:12,659 agent — Analyzing chunk 2/12
+[DEBUG] 2026-06-06 10:43:19,029 cache — Cache MISS chat  contract=15
+[ERROR] 2026-06-06 10:43:19,067 embedder — Query failed for contract 15: Error executing plan: Internal error: Error finding id
+[DEBUG] 2026-06-06 10:43:19,627 cache — Cache SET  chat  contract=15  ttl=14400s
+[INFO] 2026-06-06 10:43:27,037 agent — Chunk 1: found 3 flags
+[INFO] 2026-06-06 10:43:53,289 agent — Analyzing chunk 3/12
+[INFO] 2026-06-06 10:44:09,584 agent — Chunk 2: found 7 flags
+[INFO] 2026-06-06 10:45:13,119 agent — Analyzing chunk 4/12
+[INFO] 2026-06-06 10:45:25,741 agent — Chunk 3: found 3 flags
+[INFO] 2026-06-06 10:45:52,277 agent — Analyzing chunk 5/12
+[INFO] 2026-06-06 10:46:05,704 agent — Chunk 4: found 0 flags
+[INFO] 2026-06-06 10:46:05,704 agent — Analyzing chunk 6/12
+[INFO] 2026-06-06 10:46:15,770 agent — Chunk 5: found 2 flags
+[INFO] 2026-06-06 10:46:37,728 agent — Analyzing chunk 7/12
+[INFO] 2026-06-06 10:46:52,332 agent — Chunk 6: found 0 flags
+[INFO] 2026-06-06 10:46:52,333 agent — Analyzing chunk 8/12
+[INFO] 2026-06-06 10:47:03,725 agent — Chunk 7: found 4 flags
+[INFO] 2026-06-06 10:47:44,233 agent — Analyzing chunk 9/12
+[INFO] 2026-06-06 10:48:00,646 agent — Chunk 8: found 4 flags
+[INFO] 2026-06-06 10:48:34,314 agent — Analyzing chunk 10/12
+[ERROR] 2026-06-06 10:48:47,279 agent — JSON parse error on chunk 9: Expecting ',' delimiter: line 23 column 80 (char 1241)
+[INFO] 2026-06-06 10:48:47,279 agent — Analyzing chunk 11/12
+[INFO] 2026-06-06 10:49:01,307 agent — Chunk 10: found 0 flags
+[INFO] 2026-06-06 10:49:01,308 agent — Analyzing chunk 12/12
+[INFO] 2026-06-06 10:49:05,997 agent — Chunk 11: found 0 flags
+[INFO] 2026-06-06 10:49:05,997 agent — Contract 15 analysis complete: 27 flags across 12 chunks
+[INFO] 2026-06-06 10:49:06,253 clause_saver — Saved 27 clause flags for contract 15
+[INFO] 2026-06-06 10:49:06,282 risk_scorer — Contract 15 risk: 33/100 (medium) — 0H 8M 19L across 27 flags
+[INFO] 2026-06-06 10:49:06,290 risk_scorer — Contract 15 finalised: medium (33/100)
+[DEBUG] 2026-06-06 10:49:06,297 cache — Cache DEL  contract list for user=1
+[DEBUG] 2026-06-06 10:58:00,425 cache — Cache MISS chat  contract=15
+[ERROR] 2026-06-06 10:58:00,919 embedder — Query failed for contract 15: Error executing plan: Internal error: Error finding id
+[DEBUG] 2026-06-06 10:58:01,924 cache — Cache SET  chat  contract=15  ttl=14400s
+[INFO] 2026-06-06 10:58:24,716 embedder — Deleted embeddings for contract 15
+[DEBUG] 2026-06-06 10:58:24,740 cache — Cache DEL  skipped (not using django-redis)
+[DEBUG] 2026-06-06 10:58:24,797 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-06 11:02:00,456 views — Queued contract 16 for async processing
+[DEBUG] 2026-06-06 11:02:00,457 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-06 11:02:00,540 tasks — Starting pipeline for contract 16: Pramod
+[INFO] 2026-06-06 11:02:00,548 tasks — [16] Step 1: Parsing file
+[INFO] 2026-06-06 11:02:09,504 pdf_parser — OCR page 1/9: 1770 chars
+[INFO] 2026-06-06 11:02:15,312 pdf_parser — OCR page 2/9: 2219 chars
+[INFO] 2026-06-06 11:02:20,191 pdf_parser — OCR page 3/9: 2099 chars
+[INFO] 2026-06-06 11:02:25,186 pdf_parser — OCR page 4/9: 2391 chars
+[INFO] 2026-06-06 11:02:29,941 pdf_parser — OCR page 5/9: 2520 chars
+[INFO] 2026-06-06 11:02:33,957 pdf_parser — OCR page 6/9: 1367 chars
+[INFO] 2026-06-06 11:02:40,574 pdf_parser — OCR page 7/9: 1671 chars
+[INFO] 2026-06-06 11:02:56,535 pdf_parser — OCR page 8/9: 8653 chars
+[INFO] 2026-06-06 11:03:05,375 pdf_parser — OCR page 9/9: 3538 chars
+[INFO] 2026-06-06 11:03:05,400 pdf_parser — Stripped 3320 chars at marker: "THIS DEED WITNESSETH"
+[INFO] 2026-06-06 11:03:05,409 tasks — [16] Parsed via ocr — 9 pages, 22903 chars
+[INFO] 2026-06-06 11:03:05,409 tasks — [16] Step 2: Embedding chunks
+[INFO] 2026-06-06 11:03:07,144 embedder — Embedded contract 16: 14 chunks stored.
+[INFO] 2026-06-06 11:03:07,145 tasks — [16] Embedded 14 chunks
+[INFO] 2026-06-06 11:03:07,145 tasks — [16] Step 3: Running clause detection agent
+[INFO] 2026-06-06 11:03:07,146 agent — Starting clause detection for contract 16
+[INFO] 2026-06-06 11:03:07,152 agent — Analyzing chunk 1/12
+[INFO] 2026-06-06 11:03:08,955 agent — Chunk 0: found 3 flags
+[INFO] 2026-06-06 11:03:24,453 agent — Analyzing chunk 2/12
+[INFO] 2026-06-06 11:03:32,416 agent — Chunk 1: found 4 flags
+[WARNING] 2026-06-06 11:03:41,485 agent — API error (attempt 1/3), retrying in 1.0s: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.1-8b-instant` in organization `org_01ks5588c2fhtrsve8qgggtzv4` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Used 5466, Requested 597. Please try again in 630ms. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+[INFO] 2026-06-06 11:04:11,061 agent — Analyzing chunk 3/12
+[INFO] 2026-06-06 11:04:23,461 agent — Chunk 2: found 6 flags
+[INFO] 2026-06-06 11:04:42,123 agent — Stripped 10 chars at marker: "WITNESSETH"
+[INFO] 2026-06-06 11:04:42,131 agent — Stripped 10 chars at marker: "WITNESSETH"
+[INFO] 2026-06-06 11:04:42,137 agent — Stripped 10 chars at marker: "WITNESSETH"
+[INFO] 2026-06-06 11:05:15,962 agent — Analyzing chunk 4/12
+[INFO] 2026-06-06 11:05:29,434 agent — Chunk 3: found 3 flags
+[INFO] 2026-06-06 11:05:54,598 agent — Analyzing chunk 5/12
+[INFO] 2026-06-06 11:06:05,100 agent — Stripped 10 chars at marker: "WITNESSETH"
+[ERROR] 2026-06-06 11:06:09,808 agent — JSON parse error on chunk 4: Extra data: line 4 column 1 (char 6)
+[INFO] 2026-06-06 11:06:09,809 agent — Analyzing chunk 6/12
+[INFO] 2026-06-06 11:06:20,336 agent — Chunk 5: found 0 flags
+[INFO] 2026-06-06 11:06:20,337 agent — Analyzing chunk 7/12
+[INFO] 2026-06-06 11:06:25,833 agent — Chunk 6: found 0 flags
+[INFO] 2026-06-06 11:06:25,834 agent — Analyzing chunk 8/12
+[INFO] 2026-06-06 11:06:41,338 agent — Chunk 7: found 3 flags
+[INFO] 2026-06-06 11:07:09,563 agent — Analyzing chunk 9/12
+[ERROR] 2026-06-06 11:07:22,186 agent — JSON parse error on chunk 8: Expecting ',' delimiter: line 10 column 263 (char 2904)
+[INFO] 2026-06-06 11:07:22,186 agent — Analyzing chunk 10/12
+[INFO] 2026-06-06 11:07:40,162 agent — Chunk 9: found 3 flags
+[INFO] 2026-06-06 11:08:03,955 agent — Analyzing chunk 11/12
+[INFO] 2026-06-06 11:08:18,169 agent — Chunk 10: found 2 flags
+[INFO] 2026-06-06 11:08:18,163 agent — Stripped 10 chars at marker: "WITNESSETH"
+[INFO] 2026-06-06 11:08:32,099 agent — Analyzing chunk 12/12
+[INFO] 2026-06-06 11:08:40,974 agent — Chunk 11: found 1 flags
+[INFO] 2026-06-06 11:08:45,442 agent — Contract 16 analysis complete: 25 flags across 12 chunks
+[INFO] 2026-06-06 11:08:45,679 clause_saver — Saved 25 clause flags for contract 16
+[INFO] 2026-06-06 11:08:45,679 tasks — [16] Saved 25 clause flags
+[INFO] 2026-06-06 11:08:45,680 tasks — [16] Step 4: Computing risk score
+[INFO] 2026-06-06 11:08:45,702 risk_scorer — Contract 16 risk: 35/100 (medium) — 0H 8M 17L across 25 flags
+[INFO] 2026-06-06 11:08:45,715 risk_scorer — Contract 16 finalised: medium (35/100)
+[INFO] 2026-06-06 11:08:45,716 tasks — [16] Risk score: medium (35/100) — 0H 8M 17L
+[INFO] 2026-06-06 11:08:45,716 tasks — [16] Pipeline complete.
+[INFO] 2026-06-06 11:11:04,341 agent — Stripped 10 chars at marker: "WITNESSETH"
+[DEBUG] 2026-06-06 11:11:29,006 cache — Cache MISS chat  contract=16
+[INFO] 2026-06-06 11:11:30,282 embedder — Loading embedding model: all-MiniLM-L6-v2
+[INFO] 2026-06-06 11:11:40,147 embedder — Embedding model loaded.
+[DEBUG] 2026-06-06 11:11:42,550 cache — Cache SET  chat  contract=16  ttl=14400s
+[DEBUG] 2026-06-06 11:12:02,571 cache — Cache MISS chat  contract=16
+[DEBUG] 2026-06-06 11:12:03,557 cache — Cache SET  chat  contract=16  ttl=14400s
+[DEBUG] 2026-06-06 11:12:35,255 cache — Cache MISS chat  contract=16
+[DEBUG] 2026-06-06 11:12:36,189 cache — Cache SET  chat  contract=16  ttl=14400s
+[DEBUG] 2026-06-06 11:12:44,790 cache — Cache MISS chat  contract=16
+[DEBUG] 2026-06-06 11:12:45,859 cache — Cache SET  chat  contract=16  ttl=14400s
+[DEBUG] 2026-06-06 11:13:16,304 cache — Cache MISS chat  contract=16
+[DEBUG] 2026-06-06 11:13:17,173 cache — Cache SET  chat  contract=16  ttl=14400s
+[INFO] 2026-06-06 11:21:39,680 agent — Stripped 10 chars at marker: "WITNESSETH"
+[INFO] 2026-06-06 11:21:39,684 agent — Stripped 10 chars at marker: "WITNESSETH"
+[INFO] 2026-06-06 11:21:39,748 agent — Stripped 10 chars at marker: "WITNESSETH"
+[DEBUG] 2026-06-06 11:22:15,976 cache — Cache MISS chat  contract=16
+[INFO] 2026-06-06 11:22:16,203 embedder — Loading embedding model: all-MiniLM-L6-v2
+[INFO] 2026-06-06 11:22:26,293 embedder — Embedding model loaded.
+[DEBUG] 2026-06-06 11:22:28,544 cache — Cache SET  chat  contract=16  ttl=14400s
+[INFO] 2026-06-06 11:29:52,285 agent — Stripped 10 chars at marker: "WITNESSETH"
+[DEBUG] 2026-06-06 11:30:41,945 cache — Cache MISS chat  contract=16
+[DEBUG] 2026-06-06 11:30:43,008 cache — Cache SET  chat  contract=16  ttl=14400s
+[DEBUG] 2026-06-06 11:30:57,378 cache — Cache MISS chat  contract=16
+[DEBUG] 2026-06-06 11:30:58,216 cache — Cache SET  chat  contract=16  ttl=14400s
+[DEBUG] 2026-06-06 11:31:08,891 cache — Cache MISS chat  contract=16
+[DEBUG] 2026-06-06 11:31:09,645 cache — Cache SET  chat  contract=16  ttl=14400s
+[INFO] 2026-06-06 11:34:22,351 views — Queued contract 17 for async processing
+[DEBUG] 2026-06-06 11:34:22,354 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-06 11:34:22,559 tasks — Starting pipeline for contract 17: Shree Laxmi Narayan Dairy Compressed
+[INFO] 2026-06-06 11:34:22,575 tasks — [17] Step 1: Parsing file
+[INFO] 2026-06-06 11:34:28,940 pdf_parser — OCR page 1/23: 903 chars
+[INFO] 2026-06-06 11:34:34,841 pdf_parser — OCR page 2/23: 3594 chars
+[INFO] 2026-06-06 11:34:41,423 pdf_parser — OCR page 3/23: 3958 chars
+[INFO] 2026-06-06 11:34:47,605 pdf_parser — OCR page 4/23: 4439 chars
+[INFO] 2026-06-06 11:34:53,320 pdf_parser — OCR page 5/23: 4193 chars
+[INFO] 2026-06-06 11:34:58,405 pdf_parser — OCR page 6/23: 3771 chars
+[INFO] 2026-06-06 11:35:03,589 pdf_parser — OCR page 7/23: 3807 chars
+[INFO] 2026-06-06 11:35:08,882 pdf_parser — OCR page 8/23: 3761 chars
+[INFO] 2026-06-06 11:35:13,919 pdf_parser — OCR page 9/23: 3535 chars
+[INFO] 2026-06-06 11:35:18,860 pdf_parser — OCR page 10/23: 3401 chars
+[INFO] 2026-06-06 11:35:24,185 pdf_parser — OCR page 11/23: 3979 chars
+[INFO] 2026-06-06 11:35:28,021 pdf_parser — OCR page 12/23: 1961 chars
+[INFO] 2026-06-06 11:35:48,975 pdf_parser — OCR page 13/23: 12030 chars
+[INFO] 2026-06-06 11:35:57,160 pdf_parser — OCR page 14/23: 4506 chars
+[INFO] 2026-06-06 11:36:00,901 pdf_parser — OCR page 15/23: 1170 chars
+[INFO] 2026-06-06 11:36:05,033 pdf_parser — OCR page 16/23: 1599 chars
+[INFO] 2026-06-06 11:36:08,596 pdf_parser — OCR page 17/23: 784 chars
+[INFO] 2026-06-06 11:36:13,517 pdf_parser — OCR page 18/23: 2179 chars
+[INFO] 2026-06-06 11:36:19,116 pdf_parser — OCR page 19/23: 2683 chars
+[INFO] 2026-06-06 11:36:23,998 pdf_parser — OCR page 20/23: 1908 chars
+[INFO] 2026-06-06 11:36:27,411 pdf_parser — OCR page 21/23: 666 chars
+[INFO] 2026-06-06 11:36:32,569 pdf_parser — OCR page 22/23: 2200 chars
+[INFO] 2026-06-06 11:36:35,502 pdf_parser — OCR page 23/23: 1019 chars
+[INFO] 2026-06-06 11:36:35,538 pdf_parser — Stripped 859 chars at marker: "THIS AGREEMENT"
+[INFO] 2026-06-06 11:36:35,546 tasks — [17] Parsed via ocr — 23 pages, 69795 chars
+[INFO] 2026-06-06 11:36:35,547 tasks — [17] Step 2: Embedding chunks
+[INFO] 2026-06-06 11:36:39,134 embedder — Embedded contract 17: 35 chunks stored.
+[INFO] 2026-06-06 11:36:39,135 tasks — [17] Embedded 35 chunks
+[INFO] 2026-06-06 11:36:39,135 tasks — [17] Step 3: Running clause detection agent
+[INFO] 2026-06-06 11:36:39,136 agent — Starting clause detection for contract 17
+[INFO] 2026-06-06 11:36:39,145 agent — Stripped 68788 chars at marker: "NOW THEREFORE"
+[INFO] 2026-06-06 11:36:39,149 agent — Analyzing chunk 1/1
+[INFO] 2026-06-06 11:36:40,325 agent — Chunk 0: found 2 flags
+[INFO] 2026-06-06 11:36:43,666 agent — Contract 17 analysis complete: 2 flags across 1 chunks
+[INFO] 2026-06-06 11:36:43,689 clause_saver — Saved 2 clause flags for contract 17
+[INFO] 2026-06-06 11:36:43,689 tasks — [17] Saved 2 clause flags
+[INFO] 2026-06-06 11:36:43,689 tasks — [17] Step 4: Computing risk score
+[INFO] 2026-06-06 11:36:43,696 risk_scorer — Contract 17 risk: 21/100 (low) — 0H 0M 2L across 2 flags
+[INFO] 2026-06-06 11:36:43,702 risk_scorer — Contract 17 finalised: low (21/100)
+[INFO] 2026-06-06 11:36:43,702 tasks — [17] Risk score: low (21/100) — 0H 0M 2L
+[INFO] 2026-06-06 11:36:43,702 tasks — [17] Pipeline complete.
+[DEBUG] 2026-06-06 11:36:45,134 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-06 11:36:47,407 agent — Stripped 68788 chars at marker: "NOW THEREFORE"
+[DEBUG] 2026-06-06 11:44:07,792 cache — Cache MISS chat  contract=17
+[ERROR] 2026-06-06 11:44:08,628 embedder — Query failed for contract 17: Error executing plan: Internal error: Error finding id
+[DEBUG] 2026-06-06 11:44:09,926 cache — Cache SET  chat  contract=17  ttl=14400s
+[DEBUG] 2026-06-06 11:44:25,651 cache — Cache MISS chat  contract=17
+[ERROR] 2026-06-06 11:44:25,701 embedder — Query failed for contract 17: Error executing plan: Internal error: Error finding id
+[DEBUG] 2026-06-06 11:44:26,331 cache — Cache SET  chat  contract=17  ttl=14400s
+[DEBUG] 2026-06-06 11:45:07,676 cache — Cache MISS chat  contract=17
+[ERROR] 2026-06-06 11:45:07,829 embedder — Query failed for contract 17: Error executing plan: Internal error: Error finding id
+[DEBUG] 2026-06-06 11:45:08,607 cache — Cache SET  chat  contract=17  ttl=14400s
+[INFO] 2026-06-06 11:45:24,117 agent — Stripped 68788 chars at marker: "NOW THEREFORE"
+[INFO] 2026-06-06 11:47:17,365 views — Queued contract 18 for async processing
+[DEBUG] 2026-06-06 11:47:17,368 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-06 11:47:17,474 tasks — Starting pipeline for contract 18: Indresh Kumar
+[INFO] 2026-06-06 11:47:17,486 tasks — [18] Step 1: Parsing file
+[INFO] 2026-06-06 11:47:26,168 pdf_parser — OCR page 1/9: 1685 chars
+[INFO] 2026-06-06 11:47:31,542 pdf_parser — OCR page 2/9: 2185 chars
+[INFO] 2026-06-06 11:47:37,659 pdf_parser — OCR page 3/9: 2632 chars
+[INFO] 2026-06-06 11:47:43,324 pdf_parser — OCR page 4/9: 2339 chars
+[INFO] 2026-06-06 11:47:49,522 pdf_parser — OCR page 5/9: 2481 chars
+[INFO] 2026-06-06 11:47:54,741 pdf_parser — OCR page 6/9: 1966 chars
+[INFO] 2026-06-06 11:47:58,255 pdf_parser — OCR page 7/9: 420 chars
+[INFO] 2026-06-06 11:48:04,322 pdf_parser — OCR page 8/9: 1761 chars
+[INFO] 2026-06-06 11:48:08,910 pdf_parser — OCR page 9/9: 1164 chars
+[INFO] 2026-06-06 11:48:08,934 pdf_parser — Stripped 3131 chars at marker: "LEASE AGREEMENT"
+[INFO] 2026-06-06 11:48:08,948 tasks — [18] Parsed via ocr — 9 pages, 13411 chars
+[INFO] 2026-06-06 11:48:08,949 tasks — [18] Step 2: Embedding chunks
+[INFO] 2026-06-06 11:48:10,440 embedder — Embedded contract 18: 7 chunks stored.
+[INFO] 2026-06-06 11:48:10,444 tasks — [18] Embedded 7 chunks
+[INFO] 2026-06-06 11:48:10,445 tasks — [18] Step 3: Running clause detection agent
+[INFO] 2026-06-06 11:48:10,446 agent — Starting clause detection for contract 18
+[INFO] 2026-06-06 11:48:10,450 agent — Analyzing chunk 1/6
+[INFO] 2026-06-06 11:48:11,190 agent — Chunk 0: found 2 flags
+[INFO] 2026-06-06 11:48:14,000 agent — Analyzing chunk 2/6
+[INFO] 2026-06-06 11:48:41,152 agent — Chunk 1: found 5 flags
+[INFO] 2026-06-06 11:49:12,778 agent — Analyzing chunk 3/6
+[INFO] 2026-06-06 11:49:26,335 agent — Chunk 2: found 6 flags
+[INFO] 2026-06-06 11:50:14,946 agent — Analyzing chunk 4/6
+[INFO] 2026-06-06 11:50:35,223 agent — Chunk 3: found 3 flags
+[INFO] 2026-06-06 11:50:53,728 agent — Analyzing chunk 5/6
+[INFO] 2026-06-06 11:51:13,316 agent — Chunk 4: found 5 flags
+[INFO] 2026-06-06 11:51:40,650 agent — Analyzing chunk 6/6
+[INFO] 2026-06-06 11:51:44,896 agent — Chunk 5: found 0 flags
+[INFO] 2026-06-06 11:51:44,900 agent — Contract 18 analysis complete: 20 flags across 6 chunks
+[INFO] 2026-06-06 11:51:45,092 clause_saver — Saved 20 clause flags for contract 18
+[INFO] 2026-06-06 11:51:45,093 tasks — [18] Saved 20 clause flags
+[INFO] 2026-06-06 11:51:45,093 tasks — [18] Step 4: Computing risk score
+[INFO] 2026-06-06 11:51:45,107 risk_scorer — Contract 18 risk: 36/100 (medium) — 0H 8M 12L across 20 flags
+[INFO] 2026-06-06 11:51:45,116 risk_scorer — Contract 18 finalised: medium (36/100)
+[INFO] 2026-06-06 11:51:45,116 tasks — [18] Risk score: medium (36/100) — 0H 8M 12L
+[INFO] 2026-06-06 11:51:45,116 tasks — [18] Pipeline complete.
+[DEBUG] 2026-06-06 11:51:46,041 cache — Cache DEL  contract list for user=1
+[INFO] 2026-06-09 10:15:15,891 embedder — Loading embedding model: all-MiniLM-L6-v2
+[INFO] 2026-06-09 10:15:25,838 embedder — Embedding model loaded.
+[INFO] 2026-06-09 10:16:20,284 agent — Stripped 1004 chars at marker: "WHEREAS the Lessor"
+[INFO] 2026-06-09 10:19:14,326 risk_scorer — Contract 8 risk: 38/100 (medium) — 0H 4M 4L across 8 flags
